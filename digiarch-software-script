@@ -1,0 +1,45 @@
+# A script for basic software installations for NYPL's Digital Archives department.
+echo "Installing xcode-stuff"
+xcode-select --install
+
+# Check for Homebrew,
+# Install if we don't have it
+if test ! $(which brew); then
+  echo "Installing homebrew..."
+  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
+
+brew tap richardlehane/digipres
+# Update homebrew recipes
+echo "Updating homebrew..."
+brew update
+
+echo "Installing Git..."
+brew install git
+
+#To do: prompt for Git config
+#echo "Git config"
+#git config --global user.name "Your Name"
+#git config --global user.email brad@bradparbs.com
+
+echo "Installing other brew stuff..."
+brew install tree
+brew install wget
+brew install trash
+
+brew install p7zip
+brew install rsync
+brew install richardlehane/digipres/siegfried
+brew install m5deep
+brew install bagit
+brew install disktype
+brew install gnu-tar
+brew install python@3.8
+
+#Brew cask section
+brew install --cask vlc
+brew install --cask virtualbox
+
+#other stuff- tbd
+pip install bagit
+dd if=/dev/sr0 of=/cygdrive/z/ingest/diskImages/CollID/MediaID/objects/MediaID.iso
