@@ -43,3 +43,30 @@ brew install --cask virtualbox
 #other stuff- tbd
 pip install bagit
 dd if=/dev/sr0 of=/cygdrive/z/ingest/diskImages/CollID/MediaID/objects/MediaID.iso
+
+#VS Code extension
+code --install-extension github.vscode-pull-request-github
+
+#markdown
+code --install-extension DavidAnson.vscode-markdownlint
+code --install-extension yzhang.markdown-all-in-one
+
+#data formats
+DotJoshJohnson.xml
+mechatroner.rainbow-csv
+
+#shell
+foxundermoon.shell-format
+bmalehorn.shell-syntax
+
+#git
+GitHub.vscode-pull-request-github
+
+#python
+ms-python.python
+ms-toolsai.jupyter
+
+#ssh stuff
+ms-vscode-remote.remote-ssh
+ms-vscode-remote.remote-ssh-edit
+
