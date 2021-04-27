@@ -42,4 +42,66 @@ brew install --cask virtualbox
 
 #other stuff- tbd
 pip install bagit
-dd if=/dev/sr0 of=/cygdrive/z/ingest/diskImages/CollID/MediaID/objects/MediaID.iso
+
+# Update profile
+# Test what shell is used
+case $SHELL in
+*/zsh) 
+  profile="$HOME/.zshrc"
+  ;;
+*/bash)
+  profile="$HOME/.bash_profile"
+  ;;
+*)
+  exit
+esac
+
+# Configure rbenv
+echo '# Configure rbenv
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+' >> $profile
+
+# Configure jenv
+echo '# Configure jenv
+export PATH="$HOME/.jenv/bin:$PATH"
+eval "$(jenv init -)"
+' >> $profile
+
+source $profile
+
+#VS Code extension
+# git extensions
+code --install-extension github.vscode-pull-request-github
+
+#markdown
+# linting and markup
+code --install-extension DavidAnson.vscode-markdownlint
+code --install-extension yzhang.markdown-all-in-one
+
+#data formats
+DotJoshJohnson.xml
+mechatroner.rainbow-csv
+code --install-extension DotJoshJohnson.xml
+code --install-extension mechatroner.rainbow-csv
+
+#shell
+foxundermoon.shell-format
+bmalehorn.shell-syntax
+
+#git
+GitHub.vscode-pull-request-github
+code --install-extension foxundermoon.shell-format
+code --install-extension bmalehorn.shell-syntax
+code --install-extension ms-vscode-remote.remote-ssh
+code --install-extension ms-vscode-remote.remote-ssh-edit
+
+#python
+ms-python.python
+ms-toolsai.jupyter
+code --install-extension ms-python.python
+code --install-extension ms-toolsai.jupyter
+
+#ssh stuff
+ms-vscode-remote.remote-ssh
+ms-vscode-remote.remote-ssh-edit
