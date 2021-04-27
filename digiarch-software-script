@@ -39,6 +39,7 @@ brew install python@3.8
 #Brew cask section
 brew install --cask vlc
 brew install --cask virtualbox
+brew install --cask mediainfo 
 
 #other stuff- tbd
 pip install bagit
