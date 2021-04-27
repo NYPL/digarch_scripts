@@ -88,5 +88,3 @@ code --install-extension ms-vscode-remote.remote-ssh-edit
 #python
 code --install-extension ms-python.python
 code --install-extension ms-toolsai.jupyter
-
-
