@@ -71,6 +71,14 @@ eval "$(jenv init -)"
 source $profile
 
 #VS Code extension
+code install-extension
+code install-extension streetsidesoftware.code-spell-checker
+markdown
+xml
+json
+csv linters 
+#spelling
+
 # git extensions
 code --install-extension github.vscode-pull-request-github
 
