@@ -35,13 +35,17 @@ brew install bagit
 brew install disktype
 brew install gnu-tar
 brew install python@3.8
+brew install rbenv
+brew install jenv
 
 #Brew cask section
 brew install --cask vlc
 brew install --cask virtualbox
+brew install --cask mediainfo 
 
 #other stuff- tbd
 pip install bagit
+
 
 # Update profile
 # Test what shell is used
@@ -70,38 +74,27 @@ eval "$(jenv init -)"
 
 source $profile
 
+
 #VS Code extension
 # git extensions
 code --install-extension github.vscode-pull-request-github
+code --install-extension streetsidesoftware.code-spell-checker
 
 #markdown
-# linting and markup
 code --install-extension DavidAnson.vscode-markdownlint
 code --install-extension yzhang.markdown-all-in-one
 
 #data formats
-DotJoshJohnson.xml
-mechatroner.rainbow-csv
 code --install-extension DotJoshJohnson.xml
 code --install-extension mechatroner.rainbow-csv
 
-#shell
-foxundermoon.shell-format
-bmalehorn.shell-syntax
+#coding
+code --install-extension ms-python.python
 
-#git
-GitHub.vscode-pull-request-github
+# terminal 
 code --install-extension foxundermoon.shell-format
 code --install-extension bmalehorn.shell-syntax
 code --install-extension ms-vscode-remote.remote-ssh
 code --install-extension ms-vscode-remote.remote-ssh-edit
-
-#python
-ms-python.python
-ms-toolsai.jupyter
-code --install-extension ms-python.python
 code --install-extension ms-toolsai.jupyter
 
-#ssh stuff
-ms-vscode-remote.remote-ssh
-ms-vscode-remote.remote-ssh-edit
