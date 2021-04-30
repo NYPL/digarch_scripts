@@ -48,6 +48,9 @@ dd if=/dev/sr0 of=/cygdrive/z/ingest/diskImages/CollID/MediaID/objects/MediaID.i
 #VS Code extension
 code --install-extension github.vscode-pull-request-github
 
+#spelling
+code --install-extension streetsidesoftware.code-spell-checker
+
 #markdown
 code --install-extension DavidAnson.vscode-markdownlint
 code --install-extension yzhang.markdown-all-in-one
