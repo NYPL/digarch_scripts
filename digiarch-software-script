@@ -21,6 +21,9 @@ brew tap richardlehane/digipres
 
 echo "Updating homebrew..."
 brew update
+echo "Updating packages installed with homebrew..."
+brew upgrade
+brew upgrade --cask
 
 
 ## Install command-line apps
