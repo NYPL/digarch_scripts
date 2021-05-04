@@ -110,13 +110,6 @@ brew install mas
 mas install 937984704 # amphetamine
 
 
-# Configure Git
-#To do: prompt for Git config
-#echo "Git config"
-#git config --global user.name "Your Name"
-#git config --global user.email brad@bradparbs.com
-
-
 # Update profile
 echo "🫖🫖🫖 Updating shell profile... 🫖🫖🫖"
 
@@ -228,6 +221,21 @@ code --install-extension ms-vscode-remote.remote-ssh
 code --install-extension ms-vscode-remote.remote-ssh-edit
 
 
+# Configure Git
+echo "🫖🫖🫖 Configuring git... 🫖🫖🫖"
+read -p "Email on Github (GraceHopper@nypl.org): " ghemail
+git config --global user.email $ghemail
+
+read -p "Name on Github ("Grace Hopper", quotes important): " ghname
+git config --global user.name $ghname
+
+git config --global core.editor "code"
+echo ".DS_Store\nThumbs.db" > ~/.gitignore
+git config --global core.excludesfile ~/.gitignore
+
+
+# All done
 echo "🫖🫖🫖"
-echo "🫖🫖🫖 All done! Please check for output for errors 🫖🫖🫖"
+echo "🫖🫖🫖 All done! Please check output for errors 🫖🫖🫖"
 echo "🫖🫖🫖"
+
