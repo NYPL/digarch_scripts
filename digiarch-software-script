@@ -46,7 +46,6 @@ brew install --cask mediainfo
 #other stuff- tbd
 pip install bagit
 
-
 # Update profile
 # Test what shell is used
 case $SHELL in
@@ -61,19 +60,20 @@ case $SHELL in
 esac
 
 # Configure rbenv
-echo '# Configure rbenv
-export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
-' >> $profile
+if ! grep -q "rbenv" $profile; then
+  echo '# Configure rbenv
+  export PATH="$HOME/.rbenv/bin:$PATH"
+  eval "$(rbenv init -)"
+  ' >> $profile;
+fi
 
 # Configure jenv
-echo '# Configure jenv
-export PATH="$HOME/.jenv/bin:$PATH"
-eval "$(jenv init -)"
-' >> $profile
-
-source $profile
-
+if ! grep -q "jenv" $profile; then
+  echo '# Configure jenv
+  export PATH="$HOME/.jenv/bin:$PATH"
+  eval "$(jenv init -)"
+  ' >> $profile;
+fi
 
 #VS Code extension
 # git extensions
@@ -97,4 +97,3 @@ code --install-extension bmalehorn.shell-syntax
 code --install-extension ms-vscode-remote.remote-ssh
 code --install-extension ms-vscode-remote.remote-ssh-edit
 code --install-extension ms-toolsai.jupyter
-
