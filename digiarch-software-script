@@ -2,31 +2,33 @@
 echo "Installing xcode-stuff"
 xcode-select --install
 
-# Check for Homebrew,
-# Install if we don't have it
+# Homebrew
+
+## Check for Homebrew, install if needed
+
 if test ! $(which brew); then
   echo "Installing homebrew..."
-  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
+
+## Add Homebrew taps
+
 brew tap richardlehane/digipres
-# Update homebrew recipes
+
+
+## Update homebrew recipes and apps
+
 echo "Updating homebrew..."
 brew update
 
-echo "Installing Git..."
+
+## Install command-line apps
+
 brew install git
-
-#To do: prompt for Git config
-#echo "Git config"
-#git config --global user.name "Your Name"
-#git config --global user.email brad@bradparbs.com
-
-echo "Installing other brew stuff..."
 brew install tree
 brew install wget
 brew install trash
-
 brew install p7zip
 brew install rsync
 brew install richardlehane/digipres/siegfried
@@ -38,13 +40,20 @@ brew install python@3.8
 brew install rbenv
 brew install jenv
 
-#Brew cask section
+## Install GUI apps
+
 brew install --cask vlc
 brew install --cask virtualbox
 brew install --cask mediainfo 
 
 #other stuff- tbd
 pip install bagit
+
+# Configure Git
+#To do: prompt for Git config
+#echo "Git config"
+#git config --global user.name "Your Name"
+#git config --global user.email brad@bradparbs.com
 
 
 # Update profile
