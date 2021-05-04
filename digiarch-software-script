@@ -7,7 +7,7 @@ xcode-select --install
 ## Check for Homebrew, install if needed
 
 if test ! $(which brew); then
-  echo "🫖🫖🫖 Installing homebrew... 🫖🫖🫖"
+  echo "\n🫖🫖🫖 Installing homebrew... 🫖🫖🫖\n"
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
@@ -20,14 +20,14 @@ brew tap adoptopenjdk/openjdk
 
 ## Update homebrew recipes and apps
 
-echo "🫖🫖🫖 Updating homebrew... 🫖🫖🫖"
+echo "\n🫖🫖🫖 Updating homebrew... 🫖🫖🫖\n"
 brew update
-echo "🫖🫖🫖 Updating packages installed with homebrew... 🫖🫖🫖"
+echo "\n🫖🫖🫖 Updating packages installed with homebrew... 🫖🫖🫖\n"
 brew upgrade
 brew upgrade --cask
 
 
-echo "🫖🫖🫖 Installing packages... 🫖🫖🫖"
+echo "\n🫖🫖🫖 Installing packages... 🫖🫖🫖\n"
 ## Install command-line apps
 
 ### utilities
@@ -105,13 +105,13 @@ brew install --cask qlimagesize
 brew install --cask qladdict
 
 ## Install Mac App Store software
-echo "🫖🫖🫖 Sign-in to App Store manually before using mas 🫖🫖🫖"
+echo "\n🫖🫖🫖 Sign-in to App Store manually before using mas 🫖🫖🫖\n"
 brew install mas
 mas install 937984704 # amphetamine
 
 
 # Update profile
-echo "🫖🫖🫖 Updating shell profile... 🫖🫖🫖"
+echo "\n🫖🫖🫖 Updating shell profile... 🫖🫖🫖\n"
 
 ## Test what shell is used
 case $SHELL in
@@ -178,7 +178,7 @@ source $profile
 
 
 # Install language versions with managers
-echo "🫖🫖🫖 Updating default coding languages... 🫖🫖🫖"
+echo "\n🫖🫖🫖 Updating default coding languages... 🫖🫖🫖\n"
 
 ## Ruby
 ruby_version="2.7.3"
@@ -196,7 +196,7 @@ pyenv global $python_version
 
 
 # VS Code extensions
-echo "🫖🫖🫖 Updating VS Code extensions... 🫖🫖🫖"
+echo "\n🫖🫖🫖 Updating VS Code extensions... 🫖🫖🫖\n"
 
 ## git extensions
 code --install-extension github.vscode-pull-request-github
@@ -222,16 +222,25 @@ code --install-extension ms-vscode-remote.remote-ssh-edit
 
 
 # Configure Git
-echo "🫖🫖🫖 Configuring git... 🫖🫖🫖"
-read -p "Email on Github (GraceHopper@nypl.org): " ghemail
-git config --global user.email $ghemail
+echo "\n🫖🫖🫖 Configuring git... 🫖🫖🫖\n"
+if !(git config --list | grep -q "user.email"); then
+	read -p "Email on Github (GraceHopper@nypl.org): " ghemail
+	git config --global user.email $ghemail
+fi
 
-read -p "Name on Github ("Grace Hopper", quotes important): " ghname
-git config --global user.name $ghname
+if !(git config --list | grep -q "user.name"); then
+	read -p "Name on Github ("Grace Hopper", quotes important): " ghname
+	git config --global user.name $ghname
+fi
 
-git config --global core.editor "code"
-echo ".DS_Store\nThumbs.db" > ~/.gitignore
-git config --global core.excludesfile ~/.gitignore
+if !(git config --list | grep -q "core.editor"); then
+	git config --global core.editor "code"
+fi
+
+if !(git config --list | grep -q "excludesfile"); then
+	echo ".DS_Store\nThumbs.db" > ~/.gitignore
+	git config --global core.excludesfile ~/.gitignore
+fi
 
 
 # All done
