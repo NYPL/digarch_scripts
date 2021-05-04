@@ -15,6 +15,7 @@ fi
 ## Add Homebrew taps
 
 brew tap richardlehane/digipres
+brew tap adoptopenjdk/openjdk
 
 
 ## Update homebrew recipes and apps
@@ -39,18 +40,17 @@ brew install m5deep
 brew install bagit
 brew install disktype
 brew install gnu-tar
-brew install python@3.8
 brew install rbenv
 brew install jenv
+brew install pyenv
 
 ## Install GUI apps
 
 brew install --cask vlc
 brew install --cask virtualbox
 brew install --cask mediainfo 
+brew install --cask adoptopenjdk8
 
-#other stuff- tbd
-pip install bagit
 
 # Configure Git
 #To do: prompt for Git config
@@ -123,6 +123,25 @@ fi
 ## Reload profile with modifications
 
 source $profile
+
+
+# Install language versions with managers
+
+## Ruby
+ruby_version="2.7.3"
+rbenv install $ruby_version
+rbenv global $ruby_version
+
+## Java
+jenv enable-plugin export
+exec $SHELL -l
+jenv add /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
+jenv global 1.8
+
+## Python
+python_version=$(pyenv install --list | sed 's/^  //' | grep -v - | grep -v a | grep -v b | tail -1)
+pyenv install $python_version
+pyenv global $python_version
 
 
 # VS Code extensions
