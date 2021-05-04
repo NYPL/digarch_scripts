@@ -96,25 +96,43 @@ if ! grep -q "pyenv" $profile; then
 fi
 
 
-#VS Code extension
-# git extensions
-code --install-extension github.vscode-pull-request-github
-code --install-extension streetsidesoftware.code-spell-checker
+## Configure aliases
 
-#markdown
+### Add alias for VS Code
+if ! grep -q "Visual Studio Code" $profile; then
+	cat <<- 'END' >> $profile 
+	# Configure VS Code
+	export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+	
+	END
+fi
+
+
+## Reload profile with modifications
+
+source $profile
+
+
+# VS Code extensions
+
+## git extensions
+code --install-extension github.vscode-pull-request-github
+
+## markdown
 code --install-extension DavidAnson.vscode-markdownlint
 code --install-extension yzhang.markdown-all-in-one
+code --install-extension streetsidesoftware.code-spell-checker
 
-#data formats
+## data formats
 code --install-extension DotJoshJohnson.xml
 code --install-extension mechatroner.rainbow-csv
 
-#coding
+## coding
 code --install-extension ms-python.python
+code --install-extension ms-toolsai.jupyter
 
-# terminal 
+## terminal 
 code --install-extension foxundermoon.shell-format
 code --install-extension bmalehorn.shell-syntax
 code --install-extension ms-vscode-remote.remote-ssh
 code --install-extension ms-vscode-remote.remote-ssh-edit
-code --install-extension ms-toolsai.jupyter
