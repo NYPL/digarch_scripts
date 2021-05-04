@@ -7,7 +7,7 @@ xcode-select --install
 ## Check for Homebrew, install if needed
 
 if test ! $(which brew); then
-  echo "Installing homebrew..."
+  echo "🫖🫖🫖 Installing homebrew... 🫖🫖🫖"
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
@@ -20,36 +20,94 @@ brew tap adoptopenjdk/openjdk
 
 ## Update homebrew recipes and apps
 
-echo "Updating homebrew..."
+echo "🫖🫖🫖 Updating homebrew... 🫖🫖🫖"
 brew update
-echo "Updating packages installed with homebrew..."
+echo "🫖🫖🫖 Updating packages installed with homebrew... 🫖🫖🫖"
 brew upgrade
 brew upgrade --cask
 
 
+echo "🫖🫖🫖 Installing packages... 🫖🫖🫖"
 ## Install command-line apps
 
+### utilities
 brew install git
+brew install coreutils
+brew install grep
+brew install jq
+brew install xmlstarlet
 brew install tree
 brew install wget
 brew install trash
+### file management
 brew install p7zip
 brew install rsync
-brew install richardlehane/digipres/siegfried
-brew install m5deep
+brew install gnu-tar
+brew install awscli
+brew install ntfs-3g
+brew install clamav
+### image audio video
+brew install graphicsmagick
+brew install ffmpeg
+brew install mediainfo
+brew install mpc
+brew install flac
+brew install sox
+brew install exiftool
+brew install mkvtoolnix
+brew install mediaconch
+brew install qcli
+### born-digital
+brew install bulk_extractor
+brew install siegfried
+brew install droid
+brew install md5deep
 brew install bagit
 brew install disktype
-brew install gnu-tar
+### language version management
 brew install rbenv
 brew install jenv
 brew install pyenv
 
+
 ## Install GUI apps
 
+### desktop utilities
+brew install --cask the-unarchiver
+brew install --cask google-chrome
+brew install --cask firefox
+brew install --cask slack
+brew install --cask microsoft-remote-desktop
+brew install --cask microsoft-teams
+brew install --cask zoom
+### media
 brew install --cask vlc
-brew install --cask virtualbox
 brew install --cask mediainfo 
+brew install --cask qctools
+brew install --cask hex-fiend
+brew install --cask disk-arbitrator
+brew install --cask virtualbox
+### data
+brew install --cask db-browser-for-sqlite
+brew install --cask tableplus
+brew install --cask visual-studio-code
 brew install --cask adoptopenjdk8
+### quicklook plugins
+brew install --cask qlcolorcode
+brew install --cask quicklook-csv
+brew install --cask qlmarkdown
+brew install --cask qlstephen
+brew install --cask quicklook-json
+brew install --cask webpquicklook
+brew install --cask jupyter-notebook-ql
+brew install --cask qlvideo
+brew install --cask qlimagesize
+brew install --cask qladdict
+
+## Install Mac App Store software
+echo "🫖🫖🫖 Sign-in to App Store manually before using mas 🫖🫖🫖"
+brew install mas
+mas install 937984704 # amphetamine
 
 
 # Configure Git
@@ -60,6 +118,7 @@ brew install --cask adoptopenjdk8
 
 
 # Update profile
+echo "🫖🫖🫖 Updating shell profile... 🫖🫖🫖"
 
 ## Test what shell is used
 case $SHELL in
@@ -126,6 +185,7 @@ source $profile
 
 
 # Install language versions with managers
+echo "🫖🫖🫖 Updating default coding languages... 🫖🫖🫖"
 
 ## Ruby
 ruby_version="2.7.3"
@@ -133,8 +193,6 @@ rbenv install $ruby_version
 rbenv global $ruby_version
 
 ## Java
-jenv enable-plugin export
-exec $SHELL -l
 jenv add /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
 jenv global 1.8
 
@@ -145,6 +203,7 @@ pyenv global $python_version
 
 
 # VS Code extensions
+echo "🫖🫖🫖 Updating VS Code extensions... 🫖🫖🫖"
 
 ## git extensions
 code --install-extension github.vscode-pull-request-github
@@ -167,3 +226,8 @@ code --install-extension foxundermoon.shell-format
 code --install-extension bmalehorn.shell-syntax
 code --install-extension ms-vscode-remote.remote-ssh
 code --install-extension ms-vscode-remote.remote-ssh-edit
+
+
+echo "🫖🫖🫖"
+echo "🫖🫖🫖 All done! Please check for output for errors 🫖🫖🫖"
+echo "🫖🫖🫖"
