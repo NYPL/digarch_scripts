@@ -46,8 +46,10 @@ brew install --cask mediainfo
 #other stuff- tbd
 pip install bagit
 
+
 # Update profile
-# Test what shell is used
+
+## Test what shell is used
 case $SHELL in
 */zsh) 
   profile="$HOME/.zshrc"
@@ -59,21 +61,40 @@ case $SHELL in
   exit
 esac
 
-# Configure rbenv
+
+## Configure code distribution managers
+
+### Configure rbenv
 if ! grep -q "rbenv" $profile; then
-  echo '# Configure rbenv
-  export PATH="$HOME/.rbenv/bin:$PATH"
-  eval "$(rbenv init -)"
-  ' >> $profile;
+	cat <<- 'END' >> $profile
+	# Configure rbenv
+	export PATH="$HOME/.rbenv/bin:$PATH"
+	eval "$(rbenv init -)"
+
+	END
 fi
 
-# Configure jenv
+### Configure jenv
 if ! grep -q "jenv" $profile; then
-  echo '# Configure jenv
-  export PATH="$HOME/.jenv/bin:$PATH"
-  eval "$(jenv init -)"
-  ' >> $profile;
+	echo hi
+	cat <<- 'END' >> $profile 
+	# Configure jenv
+	export PATH="$HOME/.jenv/bin:$PATH"
+	eval "$(jenv init -)"
+
+	END
 fi
+
+### Configure pyenv
+if ! grep -q "pyenv" $profile; then
+	cat <<- 'END' >> $profile 
+	# Configure pyenv
+	export PATH="$HOME/.pyenv/bin:$PATH"
+	eval "$(pyenv init -)"
+	
+	END
+fi
+
 
 #VS Code extension
 # git extensions
