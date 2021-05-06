@@ -2,52 +2,118 @@
 echo "Installing xcode-stuff"
 xcode-select --install
 
-# Check for Homebrew,
-# Install if we don't have it
+# Homebrew
+
+## Check for Homebrew, install if needed
+
 if test ! $(which brew); then
-  echo "Installing homebrew..."
-  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+  echo "\n🫖🫖🫖 Installing homebrew... 🫖🫖🫖\n"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
+
+## Add Homebrew taps
+
 brew tap richardlehane/digipres
-# Update homebrew recipes
-echo "Updating homebrew..."
+brew tap adoptopenjdk/openjdk
+
+
+## Update homebrew recipes and apps
+
+echo "\n🫖🫖🫖 Updating homebrew... 🫖🫖🫖\n"
 brew update
+echo "\n🫖🫖🫖 Updating packages installed with homebrew... 🫖🫖🫖\n"
+brew upgrade
+brew upgrade --cask
 
-echo "Installing Git..."
+
+echo "\n🫖🫖🫖 Installing packages... 🫖🫖🫖\n"
+## Install command-line apps
+
+### utilities
 brew install git
-
-#To do: prompt for Git config
-#echo "Git config"
-#git config --global user.name "Your Name"
-#git config --global user.email brad@bradparbs.com
-
-echo "Installing other brew stuff..."
+brew install coreutils
+brew install grep
+brew install jq
+brew install xmlstarlet
 brew install tree
 brew install wget
 brew install trash
-
+### file management
 brew install p7zip
 brew install rsync
-brew install richardlehane/digipres/siegfried
-brew install m5deep
+brew install gnu-tar
+brew install awscli
+brew install ntfs-3g
+brew install clamav
+### image audio video
+brew install graphicsmagick
+brew install ffmpeg
+brew install mediainfo
+brew install mpc
+brew install flac
+brew install sox
+brew install exiftool
+brew install mkvtoolnix
+brew install mediaconch
+brew install qcli
+### born-digital
+brew install bulk_extractor
+brew install siegfried
+brew install droid
+brew install md5deep
 brew install bagit
 brew install disktype
-brew install gnu-tar
-brew install python@3.8
+### language version management
 brew install rbenv
 brew install jenv
+brew install pyenv
 
-#Brew cask section
+
+## Install GUI apps
+
+### desktop utilities
+brew install --cask the-unarchiver
+brew install --cask google-chrome
+brew install --cask firefox
+brew install --cask slack
+brew install --cask microsoft-remote-desktop
+brew install --cask microsoft-teams
+brew install --cask zoom
+### media
 brew install --cask vlc
-brew install --cask virtualbox
 brew install --cask mediainfo 
+brew install --cask qctools
+brew install --cask hex-fiend
+brew install --cask disk-arbitrator
+brew install --cask virtualbox
+### data
+brew install --cask db-browser-for-sqlite
+brew install --cask tableplus
+brew install --cask visual-studio-code
+brew install --cask adoptopenjdk8
+### quicklook plugins
+brew install --cask qlcolorcode
+brew install --cask quicklook-csv
+brew install --cask qlmarkdown
+brew install --cask qlstephen
+brew install --cask quicklook-json
+brew install --cask webpquicklook
+brew install --cask jupyter-notebook-ql
+brew install --cask qlvideo
+brew install --cask qlimagesize
+brew install --cask qladdict
 
-#other stuff- tbd
-pip install bagit
+## Install Mac App Store software
+echo "\n🫖🫖🫖 Sign-in to App Store manually before using mas 🫖🫖🫖\n"
+brew install mas
+mas install 937984704 # amphetamine
+
 
 # Update profile
-# Test what shell is used
+echo "\n🫖🫖🫖 Updating shell profile... 🫖🫖🫖\n"
+
+## Test what shell is used
 case $SHELL in
 */zsh) 
   profile="$HOME/.zshrc"
@@ -59,41 +125,126 @@ case $SHELL in
   exit
 esac
 
-# Configure rbenv
+
+## Configure code distribution managers
+
+### Configure rbenv
 if ! grep -q "rbenv" $profile; then
-  echo '# Configure rbenv
-  export PATH="$HOME/.rbenv/bin:$PATH"
-  eval "$(rbenv init -)"
-  ' >> $profile;
+	cat <<- 'END' >> $profile
+	# Configure rbenv
+	export PATH="$HOME/.rbenv/bin:$PATH"
+	eval "$(rbenv init -)"
+
+	END
 fi
 
-# Configure jenv
+### Configure jenv
 if ! grep -q "jenv" $profile; then
-  echo '# Configure jenv
-  export PATH="$HOME/.jenv/bin:$PATH"
-  eval "$(jenv init -)"
-  ' >> $profile;
+	echo hi
+	cat <<- 'END' >> $profile 
+	# Configure jenv
+	export PATH="$HOME/.jenv/bin:$PATH"
+	eval "$(jenv init -)"
+
+	END
 fi
 
-#VS Code extension
-# git extensions
-code --install-extension github.vscode-pull-request-github
-code --install-extension streetsidesoftware.code-spell-checker
+### Configure pyenv
+if ! grep -q "pyenv" $profile; then
+	cat <<- 'END' >> $profile 
+	# Configure pyenv
+	export PATH="$HOME/.pyenv/bin:$PATH"
+	eval "$(pyenv init -)"
+	
+	END
+fi
 
-#markdown
+
+## Configure aliases
+
+### Add alias for VS Code
+if ! grep -q "Visual Studio Code" $profile; then
+	cat <<- 'END' >> $profile 
+	# Configure VS Code
+	export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+	
+	END
+fi
+
+
+## Reload profile with modifications
+
+source $profile
+
+
+# Install language versions with managers
+echo "\n🫖🫖🫖 Updating default coding languages... 🫖🫖🫖\n"
+
+## Ruby
+ruby_version="2.7.3"
+rbenv install $ruby_version
+rbenv global $ruby_version
+
+## Java
+jenv add /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
+jenv global 1.8
+
+## Python
+python_version=$(pyenv install --list | sed 's/^  //' | grep -v - | grep -v a | grep -v b | tail -1)
+pyenv install $python_version
+pyenv global $python_version
+
+
+# VS Code extensions
+echo "\n🫖🫖🫖 Updating VS Code extensions... 🫖🫖🫖\n"
+
+## git extensions
+code --install-extension github.vscode-pull-request-github
+
+## markdown
 code --install-extension DavidAnson.vscode-markdownlint
 code --install-extension yzhang.markdown-all-in-one
+code --install-extension streetsidesoftware.code-spell-checker
 
-#data formats
+## data formats
 code --install-extension DotJoshJohnson.xml
 code --install-extension mechatroner.rainbow-csv
 
-#coding
+## coding
 code --install-extension ms-python.python
+code --install-extension ms-toolsai.jupyter
 
-# terminal 
+## terminal 
 code --install-extension foxundermoon.shell-format
 code --install-extension bmalehorn.shell-syntax
 code --install-extension ms-vscode-remote.remote-ssh
 code --install-extension ms-vscode-remote.remote-ssh-edit
-code --install-extension ms-toolsai.jupyter
+
+
+# Configure Git
+echo "\n🫖🫖🫖 Configuring git... 🫖🫖🫖\n"
+if !(git config --list | grep -q "user.email"); then
+	read -p "Email on Github (GraceHopper@nypl.org): " ghemail
+	git config --global user.email $ghemail
+fi
+
+if !(git config --list | grep -q "user.name"); then
+	read -p "Name on Github ("Grace Hopper", quotes important): " ghname
+	git config --global user.name $ghname
+fi
+
+if !(git config --list | grep -q "core.editor"); then
+	git config --global core.editor "code"
+fi
+
+if !(git config --list | grep -q "excludesfile"); then
+	echo ".DS_Store\nThumbs.db" > ~/.gitignore
+	git config --global core.excludesfile ~/.gitignore
+fi
+
+
+# All done
+echo "🫖🫖🫖"
+echo "🫖🫖🫖 All done! Please check output for errors 🫖🫖🫖"
+echo "🫖🫖🫖"
+
