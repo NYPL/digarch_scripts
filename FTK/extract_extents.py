@@ -27,7 +27,25 @@ def extract_file_tableids(tree):
     return file_tableids
 
 
+def get_file_size(file_tableid):
+    '''
+    extract the file size based on its location in the file table
+    '''
+    
+    table_cell = tree.xpath(
+        f'/fo:root/fo:page-sequence/fo:flow/fo:table[@id="{file_tableid}"]'\
+        '/fo:table-body/fo:table-row/fo:table-cell/fo:block/text()',
+        namespaces=FO_NAMESPACE
+    )
+    file_size = int(table_cell[2].replace(" B",""))
+
+    return file_size
+
+
 def generate_report(tree, file_tableids):
+    '''
+    generate a list of all bookmark ids and add up file info
+    '''
     report = []
 
     for bookmark in tree.xpath(
@@ -37,33 +55,28 @@ def generate_report(tree, file_tableids):
         bookmark_id = bookmark.get('id')
 
     if 'bk' in bookmark_id:
-        name = tree.xpath(
+        bookmark_name = tree.xpath(
             f'/fo:root/fo:page-sequence/fo:flow/fo:block[@id="{bookmark_id}"]/text()',
             namespaces=FO_NAMESPACE
         )
-        table_id = bookmark_id.replace('k','f')
+        file_tableid_prefix = bookmark_id.replace('k','f')
         logical_size = 0
         file_count = 0
 
-        for x in file_tableids:
-            if table_id in x:
-                table_cell = tree.xpath(
-                    f'/fo:root/fo:page-sequence/fo:flow/fo:table[@id="{x}"]/fo:table-body/fo:table-row/fo:table-cell/fo:block/text()',
-                    namespaces=FO_NAMESPACE
-                )
-                new_file = int(table_cell[2].replace(" B",""))
-                logical_size += new_file
+        for file_tableid in file_tableids:
+            if file_tableid_prefix in file_tableid:
+                logical_size += get_file_size(file_tableid)
                 file_count += 1
 
-        if "Bookmark" in name[0]:
+
+        if "Bookmark" in bookmark_name[0]:
             report[bookmark_id] = [
-                name[0].replace("Bookmark: ",""),
+                bookmark_name[0].replace("Bookmark: ",""),
                 file_count,
                 logical_size
             ]
 
     return report
-
 
 def make_csv(report):
     df = pd.DataFrame(report)
