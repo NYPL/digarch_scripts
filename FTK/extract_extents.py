@@ -6,8 +6,14 @@ from lxml import etree
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
 
 
-def extract_table_ids(tree):
-    table_ids = []
+def extract_file_tableids(tree):
+    '''
+    every bookmarked file is represented by a table with a unique id,
+    bf####_####
+    the first #### is a shared id for all files in the bookmark
+    '''
+    
+    file_tableids = []
 
     bf_table_ids = tree.xpath(
         '/fo:root/fo:page-sequence/fo:flow/fo:table[@id]',
@@ -16,12 +22,12 @@ def extract_table_ids(tree):
 
     for item in bf_table_ids:
         if "bf" in item.get('id'):
-            table_ids.append(item.get('id'))
+            file_tableids.append(item.get('id'))
 
-    return table_ids
+    return file_tableids
 
 
-def generate_report(tree, table_ids):
+def generate_report(tree, file_tableids):
     report = []
 
     for bookmark in tree.xpath(
@@ -39,7 +45,7 @@ def generate_report(tree, table_ids):
         logical_size = 0
         file_count = 0
 
-        for x in table_ids:
+        for x in file_tableids:
             if table_id in x:
                 table_cell = tree.xpath(
                     f'/fo:root/fo:page-sequence/fo:flow/fo:table[@id="{x}"]/fo:table-body/fo:table-row/fo:table-cell/fo:block/text()',
@@ -68,8 +74,8 @@ def make_csv(report):
 
 def main():
     tree = etree.parse('/ER3-Report.xml')
-    table_ids = extract_table_ids(tree)
-    report = generate_report(tree, table_ids)
+    file_tableids = extract_file_tableids(tree)
+    report = generate_report(tree, file_tableids)
     make_csv(report)
 
 
