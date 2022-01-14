@@ -46,15 +46,16 @@ def generate_report(tree, file_tableids):
     '''
     generate a list of all bookmark ids and add up file info
     '''
-    report = []
+    report = {}
 
-    for bookmark in tree.xpath(
-        '/fo:root/fo:page-sequence/fo:flow/fo:block[@id]',
+    bookmarks = tree.xpath(
+        '/fo:root/fo:page-sequence[@master-reference="bookmarksPage"]/fo:flow/'\
+        'fo:block[starts-with(@id, "bk")]',
         namespaces=FO_NAMESPACE
-    ):
-        bookmark_id = bookmark.get('id')
+    )
 
-    if 'bk' in bookmark_id:
+    for bookmark in bookmarks:
+        bookmark_id = bookmark.get('id')
         bookmark_name = tree.xpath(
             f'/fo:root/fo:page-sequence/fo:flow/fo:block[@id="{bookmark_id}"]/text()',
             namespaces=FO_NAMESPACE
