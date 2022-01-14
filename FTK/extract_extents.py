@@ -1,6 +1,7 @@
 import csv
-import pandas
+import pandas as pd
 from lxml import etree
+import json
 
 
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
@@ -27,7 +28,7 @@ def extract_file_tableids(tree):
     return file_tableids
 
 
-def get_file_size(file_tableid):
+def get_file_size(tree, file_tableid):
     '''
     extract the file size based on its location in the file table
     '''
@@ -42,7 +43,7 @@ def get_file_size(file_tableid):
     return file_size
 
 
-def get_er_report(bookmark, file_tableids):
+def get_er_report(tree, bookmark, file_tableids):
     '''
     extract er number, er name, byte count, and file count
     '''
@@ -53,7 +54,6 @@ def get_er_report(bookmark, file_tableids):
     report['er_number'] = er_components[0]
     report['er_name'] = er_components[1].strip()
 
-
     bookmark_id = bookmark.get('id')
     file_tableid_prefix = bookmark_id.replace('k','f')
     report['logical_size'] = 0
@@ -61,7 +61,7 @@ def get_er_report(bookmark, file_tableids):
 
     for file_tableid in file_tableids:
         if file_tableid_prefix in file_tableid:
-            report['logical_size'] += get_file_size(file_tableid)
+            report['logical_size'] += get_file_size(tree, file_tableid)
             report['file_count'] += 1
 
     return report
@@ -81,9 +81,10 @@ def generate_report(tree, file_tableids):
 
     for bookmark in bookmarks:
         if 'ER' in bookmark.text:
-            report[bookmark.get('id')] = get_er_report(bookmark, file_tableids)
+            report[f'{bookmark.text}'] = get_er_report(tree, bookmark, file_tableids)
         else:
             continue
+
 
     return report
 
@@ -95,11 +96,17 @@ def make_csv(report):
     df.to_csv('ftk_test.csv')
 
 
+def make_json(report):
+    with open('ftk_test.json', 'w') as file:
+        json.dump(report, file)
+
+
 def main():
-    tree = etree.parse('/ER3-Report.xml')
+    tree = etree.parse('ER3-Report.xml')
     file_tableids = extract_file_tableids(tree)
     report = generate_report(tree, file_tableids)
     make_csv(report)
+    make_json(report)
 
 
 if __name__ == '__main__':
