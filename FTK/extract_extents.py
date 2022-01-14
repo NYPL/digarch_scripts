@@ -18,22 +18,25 @@ def extract_table_ids(tree):
     return table_ids
 
 
-def generate_report():
+def generate_report(tree, table_ids):
+    report = []
+
     for bookmark in tree.xpath(
         '/fo:root/fo:page-sequence/fo:flow/fo:block[@id]',
         namespaces={'fo': "http://www.w3.org/1999/XSL/Format"}
     ):
         bookmark_id = bookmark.get('id')
+
     if 'bk' in bookmark_id:
         name = tree.xpath(
             f'/fo:root/fo:page-sequence/fo:flow/fo:block[@id="{bookmark_id}"]/text()',
             namespaces={'fo': "http://www.w3.org/1999/XSL/Format"}
         )
-        table_info = []
         table_id = bookmark_id.replace('k','f')
         logical_size = 0
         file_count = 0
-        for x in all_tables:
+
+        for x in table_ids:
             if table_id in x:
                 table_cell = tree.xpath(
                     f'/fo:root/fo:page-sequence/fo:flow/fo:table[@id="{x}"]/fo:table-body/fo:table-row/fo:table-cell/fo:block/text()',
@@ -42,12 +45,15 @@ def generate_report():
                 new_file = int(table_cell[2].replace(" B",""))
                 logical_size += new_file
                 file_count += 1
+
         if "Bookmark" in name[0]:
             report[bookmark_id] = [
                 name[0].replace("Bookmark: ",""),
                 file_count,
                 logical_size
             ]
+
+    return report
 
 
 def make_csv(report):
@@ -60,7 +66,7 @@ def make_csv(report):
 def main():
     tree = etree.parse('/ER3-Report.xml')
     table_ids = extract_table_ids(tree)
-    generate_report()
+    report = generate_report(tree, table_ids)
     make_csv(report)
 
 
