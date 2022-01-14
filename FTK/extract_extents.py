@@ -3,17 +3,19 @@ import pandas as pd
 from lxml import etree
 
 
-def prepare_report():
-    report = {}
-    all_tables = []
-    name = []
+def extract_table_ids(tree):
+    table_ids = []
+
     bf_table_ids = tree.xpath(
         '/fo:root/fo:page-sequence/fo:flow/fo:table[@id]',
         namespaces={'fo': "http://www.w3.org/1999/XSL/Format"}
     )
+
     for item in bf_table_ids:
         if "bf" in item.get('id'):
-            all_tables.append(item.get('id'))
+            table_ids.append(item.get('id'))
+
+    return table_ids
 
 
 def generate_report():
@@ -57,7 +59,7 @@ def make_csv(report):
 
 def main():
     tree = etree.parse('/ER3-Report.xml')
-    prepare_report()
+    table_ids = extract_table_ids(tree)
     generate_report()
     make_csv(report)
 
