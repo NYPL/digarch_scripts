@@ -2,6 +2,7 @@ import csv
 import pandas as pd
 from lxml import etree
 import json
+import argparse
 
 
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
@@ -102,11 +103,15 @@ def make_json(report):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    args = parser.parse_args()
     tree = etree.parse('ER3-Report.xml')
     file_tableids = extract_file_tableids(tree)
     report = generate_report(tree, file_tableids)
     make_csv(report)
     make_json(report)
+
+
 
 
 if __name__ == '__main__':
