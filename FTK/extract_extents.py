@@ -7,7 +7,6 @@ import argparse
 
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
 
-
 def extract_file_tableids(tree):
     '''
     every bookmarked file is represented by a table with a unique id,
@@ -103,16 +102,15 @@ def make_json(report):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Create a CSV report from XML')
+    parser.add_argument("echo", help="echo string")
     args = parser.parse_args()
-    tree = etree.parse('ER3-Report.xml')
-    file_tableids = extract_file_tableids(tree)
-    report = generate_report(tree, file_tableids)
-    make_csv(report)
-    make_json(report)
-
-
-
+    print(args.echo)
+    #tree = etree.parse('ER3-Report.xml')
+    #file_tableids = extract_file_tableids(tree)
+    #report = generate_report(tree, file_tableids)
+    #make_csv(report)
+    #make_json(report)
 
 if __name__ == '__main__':
     main()
