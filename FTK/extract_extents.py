@@ -15,10 +15,7 @@ def _maker_parser():
             raise argparse.ArgumentTypeError(
             f'Directory or file does not exist: {f}'
             )
-        path = f
-        ext = path.split()[-1]
-        if ext.lower() != "xml":
-            print(f)
+        if f.split(sep=".")[-1].lower() != "xml":
             raise argparse.ArgumentTypeError(
             'Not a valid file type. Please use XML.'
         )
