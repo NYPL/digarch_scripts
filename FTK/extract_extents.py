@@ -19,7 +19,30 @@ def _maker_parser():
         help="destination directory",
     )
     args = parser.parse_args()
+    validate_args(args)
     return args
+
+def validate_args(args):
+    if validate_path(args):
+        validate_file_type(args)
+
+def validate_path(args):
+    if os.path.exists(args.file):
+        return True
+    else:
+        raise argparse.ArgumentTypeError(
+        f'Directory or file does not exist: {args.file}'
+    )
+    
+
+def validate_file_type(args):
+    path = args.file
+    ext = path.split()[-1]
+    if ext.lower() != ".xml":
+        raise argparse.ArgumentTypeError(
+        f'Not a valid file type. Please use XML.'
+    )
+
 
 def extract_file_tableids(tree):
     '''
