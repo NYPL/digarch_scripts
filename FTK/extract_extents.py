@@ -117,28 +117,26 @@ def generate_report(tree, file_tableids):
     return report
 
 
-def make_csv(report):
+def make_csv(args, report):
+    output = args.output
     df = pd.DataFrame(report)
     df = df.transpose()
     df.rename(columns={0:'ER Number', 1: 'ER Name', 2:'File Count', 3:'Size'})
-    df.to_csv('ftk_test.csv')
+    df.to_csv(os.path.join(output,'ftk_report.csv'))
 
 
-def make_json(report):
-    with open('ftk_test.json', 'w') as file:
+def make_json(args, report):
+    output = args.output
+    with open(os.path.join(output,'ftk_report.json'), 'w') as file:
         json.dump(report, file)
-
-#def output_to_directory(args, report):
-#    with open(make_csv(report), 'wb') as f:
-#        write(os.path.join(args.output,os.sep,'ftk_test.csv'))
 
 def main():
     args = _maker_parser()
     tree = etree.parse(args.file)
     file_tableids = extract_file_tableids(tree)
     report = generate_report(tree, file_tableids)
-    make_csv(report)
-    #output_to_directory(args,report)
+    make_csv(args, report)
+    make_json(args,report)
 
 if __name__ == '__main__':
     main()
