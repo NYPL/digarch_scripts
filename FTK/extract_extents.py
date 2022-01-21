@@ -21,6 +21,13 @@ def _maker_parser():
         )
         return f
 
+    def validate_output(f):
+        if not os.path.exists(f): 
+            raise argparse.ArgumentTypeError(
+            f'Target directory does not exist: {f}'
+            )
+        return f
+
 
     parser = argparse.ArgumentParser(description='Create a CSV report from XML')
     parser.add_argument(
@@ -31,6 +38,7 @@ def _maker_parser():
     parser.add_argument(
         "--output",
         help="destination directory",
+        type=validate_output
     )
     args = parser.parse_args()
     return args
