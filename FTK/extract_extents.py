@@ -3,6 +3,7 @@ import pandas as pd
 from lxml import etree
 import json
 import argparse
+import os
 
 
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
@@ -12,6 +13,10 @@ def _maker_parser():
     parser.add_argument(
         "file", 
         help="a path to valid XML",
+    )
+    parser.add_argument(
+        "--out",
+        help="destination directory",
     )
     args = parser.parse_args()
     return args
@@ -109,14 +114,19 @@ def make_json(report):
     with open('ftk_test.json', 'w') as file:
         json.dump(report, file)
 
+def output_to_directory(args, report):
+    files = [make_csv(report), make_json(report)]
+    for item in files:
+        with open(item, 'wb') as f:
+            newpath = os.path.join(args.out, item)
+            f.write(newpath)
 
 def main():
     args = _maker_parser()
     tree = etree.parse(args.file)
     file_tableids = extract_file_tableids(tree)
     report = generate_report(tree, file_tableids)
-    make_csv(report)
-    #make_json(report)
+    output_to_directory(args,report)
 
 if __name__ == '__main__':
     main()
