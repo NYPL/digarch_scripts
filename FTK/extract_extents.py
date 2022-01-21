@@ -9,7 +9,10 @@ FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
 
 def _maker_parser():
     parser = argparse.ArgumentParser(description='Create a CSV report from XML')
-    parser.add_argument("echo", help="echo string")
+    parser.add_argument(
+        "file", 
+        help="a path to valid XML",
+    )
     args = parser.parse_args()
     return args
 
@@ -109,11 +112,10 @@ def make_json(report):
 
 def main():
     args = _maker_parser()
-    print(args.echo)
-    #tree = etree.parse('ER3-Report.xml')
-    #file_tableids = extract_file_tableids(tree)
-    #report = generate_report(tree, file_tableids)
-    #make_csv(report)
+    tree = etree.parse(args.file)
+    file_tableids = extract_file_tableids(tree)
+    report = generate_report(tree, file_tableids)
+    make_csv(report)
     #make_json(report)
 
 if __name__ == '__main__':
