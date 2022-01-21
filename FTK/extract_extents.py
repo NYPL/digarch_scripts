@@ -9,40 +9,34 @@ import os
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
 
 def _maker_parser():
+
+    def validate_file_input(f):
+        if not os.path.exists(f):
+            raise argparse.ArgumentTypeError(
+            f'Directory or file does not exist: {f}'
+            )
+        path = f
+        ext = path.split()[-1]
+        if ext.lower() != "xml":
+            print(f)
+            raise argparse.ArgumentTypeError(
+            'Not a valid file type. Please use XML.'
+        )
+        return f
+
+
     parser = argparse.ArgumentParser(description='Create a CSV report from XML')
     parser.add_argument(
         "file", 
         help="a path to valid XML",
+        type=validate_file_input
     )
     parser.add_argument(
         "--output",
         help="destination directory",
     )
     args = parser.parse_args()
-    validate_args(args)
     return args
-
-def validate_args(args):
-    if validate_path(args):
-        validate_file_type(args)
-
-def validate_path(args):
-    if os.path.exists(args.file):
-        return True
-    else:
-        raise argparse.ArgumentTypeError(
-        f'Directory or file does not exist: {args.file}'
-    )
-    
-
-def validate_file_type(args):
-    path = args.file
-    ext = path.split()[-1]
-    if ext.lower() != ".xml":
-        raise argparse.ArgumentTypeError(
-        f'Not a valid file type. Please use XML.'
-    )
-
 
 def extract_file_tableids(tree):
     '''
