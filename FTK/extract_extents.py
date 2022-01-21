@@ -15,7 +15,7 @@ def _maker_parser():
         help="a path to valid XML",
     )
     parser.add_argument(
-        "--out",
+        "--output",
         help="destination directory",
     )
     args = parser.parse_args()
@@ -114,19 +114,17 @@ def make_json(report):
     with open('ftk_test.json', 'w') as file:
         json.dump(report, file)
 
-def output_to_directory(args, report):
-    files = [make_csv(report), make_json(report)]
-    for item in files:
-        with open(item, 'wb') as f:
-            newpath = os.path.join(args.out, item)
-            f.write(newpath)
+#def output_to_directory(args, report):
+#    with open(make_csv(report), 'wb') as f:
+#        write(os.path.join(args.output,os.sep,'ftk_test.csv'))
 
 def main():
     args = _maker_parser()
     tree = etree.parse(args.file)
     file_tableids = extract_file_tableids(tree)
     report = generate_report(tree, file_tableids)
-    output_to_directory(args,report)
+    make_csv(report)
+    #output_to_directory(args,report)
 
 if __name__ == '__main__':
     main()
