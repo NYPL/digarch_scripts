@@ -95,6 +95,7 @@ brew install --cask slack
 brew install --cask microsoft-remote-desktop
 brew install --cask microsoft-teams
 brew install --cask zoom
+brew install --cask keepingyouawake
 ### media
 brew install --cask vlc
 brew install --cask mediainfo 
@@ -108,20 +109,15 @@ brew install --cask tableplus
 brew install --cask visual-studio-code
 brew install --cask adoptopenjdk8
 ### quicklook plugins
-brew install --cask qlcolorcode
 brew install --cask quicklook-csv
-brew install --cask qlstephen
+brew install --cask qlmarkdown
 brew install --cask quicklook-json
-brew install --cask webpquicklook
-brew install --cask jupyter-notebook-ql
 brew install --cask qlvideo
-brew install --cask qlimagesize
 brew install --cask qladdict
 
 ## Install Mac App Store software
 echo "\n🫖🫖🫖 Sign-in to App Store manually before using mas 🫖🫖🫖\n"
 brew install mas
-mas install 937984704 # amphetamine
 
 
 # Update profile
