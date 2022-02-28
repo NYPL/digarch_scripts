@@ -2,6 +2,19 @@
 echo "Installing xcode-stuff"
 xcode-select --install
 
+
+## Test what shell is used
+case $SHELL in
+*/zsh) 
+  profile="$HOME/.zshrc"
+  ;;
+*/bash)
+  profile="$HOME/.bash_profile"
+  ;;
+*)
+  exit
+esac
+
 # Homebrew
 
 ## Check for Homebrew, install if needed
@@ -9,6 +22,8 @@ xcode-select --install
 if test ! $(which brew); then
   echo "\n🫖🫖🫖 Installing homebrew... 🫖🫖🫖\n"
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  echo 'eval $(/opt/homebrew/bin/brew shellenv)' >> $profile 
+  eval $(/opt/homebrew/bin/brew shellenv)
 fi
 
 
@@ -80,6 +95,7 @@ brew install --cask slack
 brew install --cask microsoft-remote-desktop
 brew install --cask microsoft-teams
 brew install --cask zoom
+brew install --cask keepingyouawake
 ### media
 brew install --cask vlc
 brew install --cask mediainfo 
@@ -93,38 +109,19 @@ brew install --cask tableplus
 brew install --cask visual-studio-code
 brew install --cask adoptopenjdk8
 ### quicklook plugins
-# brew install --cask qlcolorcode
-# brew install --cask quicklook-csv
-# brew install --cask qlmarkdown
-# brew install --cask qlstephen
-# brew install --cask quicklook-json
-# brew install --cask webpquicklook
-# brew install --cask jupyter-notebook-ql
-# brew install --cask qlvideo
-# brew install --cask qlimagesize
-# brew install --cask qladdict
+brew install --cask quicklook-csv
+brew install --cask qlmarkdown
+brew install --cask quicklook-json
+brew install --cask qlvideo
+brew install --cask qladdict
 
 ## Install Mac App Store software
 echo "\n🫖🫖🫖 Sign-in to App Store manually before using mas 🫖🫖🫖\n"
 brew install mas
-mas install 937984704 # amphetamine
 
 
 # Update profile
 echo "\n🫖🫖🫖 Updating shell profile... 🫖🫖🫖\n"
-
-## Test what shell is used
-case $SHELL in
-*/zsh) 
-  profile="$HOME/.zshrc"
-  ;;
-*/bash)
-  profile="$HOME/.bash_profile"
-  ;;
-*)
-  exit
-esac
-
 
 ## Configure code distribution managers
 
@@ -229,7 +226,7 @@ if !(git config --list | grep -q "user.email"); then
 fi
 
 if !(git config --list | grep -q "user.name"); then
-	read -p "Name on Github ("Grace Hopper", quotes important): " ghname
+	read -p "Name on Github (\"Grace Hopper\", quotes important): " ghname
 	git config --global user.name $ghname
 fi
 
