@@ -57,6 +57,7 @@ brew install trash
 ### file management
 brew install p7zip
 brew install rsync
+brew install rclone
 brew install gnu-tar
 brew install awscli
 brew install ntfs-3g
