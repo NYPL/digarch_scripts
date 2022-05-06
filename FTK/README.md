@@ -35,7 +35,7 @@ The script functions by parsing and transforming a generic (not EAD) XML output.
 
  	con't from above: 'fo:basic-link/fo:page-number-citation'
 
- The script expects to find the extent information for each individual file in a record here. It looks for an 'id' tag and a regular expression match with the logical size in bytes expressed as 1000 B.
+ The script expects to find the extent information for each individual file in a record here. It looks for an "id" tag and a regular expression match with the logical size in bytes expressed "some number B" i.e. as "1000 B".
 
  	'/fo:root/fo:page-sequence[@master-reference="bookmarksPage"]/fo:flow/fo:table[@id]'
 
