@@ -45,6 +45,7 @@ def _make_parser():
     Note that the output argument is required because of how the script
     formats the file name 
     '''
+
     parser.add_argument(
         "file", 
         help="a path to valid XML",
@@ -176,6 +177,7 @@ def get_er_report(extent_list, title, bookmark_id):
     return report
 
 def get_file_size(extent_list, bookmark_id):
+
     '''
     extract the file size by matching the id with
     the corresponding row in bookmarks table
@@ -241,7 +243,6 @@ def make_series(xml_list, level=0):
     which is derived from the indentation.
     Returns nested dict with duplicate records. 
     '''
-
 
     result = {}
     
