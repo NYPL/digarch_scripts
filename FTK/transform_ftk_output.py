@@ -180,7 +180,7 @@ def get_file_size(extent_list, bookmark_id):
     extract the file size by matching the id with
     the corresponding row in bookmarks table
     returns a list with the total file size and total file count
-    for the id that was passed.
+    for the id that was passed. This function has the largest impact on performance.
     '''
 
     file_count = 0
