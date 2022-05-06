@@ -51,7 +51,7 @@ The script functions by parsing and transforming a generic (not EAD) XML output.
 
 ### lxml parsing returns empty cells
 
-When the structure of the XML file changes, the most common result is the parser will return empty cells that either break the script or result in inaccurate information. To troubleshoot, I recommend opening the file in Juypter Nsotebook and using lxml to either parse the string or use the .tostring method.
+When the structure of the XML file changes, the most common result is that the parser will return empty cells that either break the script or result in inaccurate information. To troubleshoot, I recommend opening the XML file in Juypter Nsotebook and using lxml to either parse the string or use the .tostring method.
 
 ### performance issues for larger XML files
 
@@ -71,4 +71,4 @@ The structure of the bug is as follows:
 
 ### list logic
 
-The script works by parsing the XML for the relevant archival information, storing it in a list, and transforming that list into a nested dictionary. Issues with transforming values can typically be traced back to the transformations of list items while issues in the hierarchy can be traced to the dictionary nesting. 
+The script works by parsing the XML for the relevant archival information, storing it in a list, and transforming that list into a nested dictionary. Issues with extent values can typically be traced back to the transformations of list items while issues in the hierarchy can be traced to the dictionary nesting. 
