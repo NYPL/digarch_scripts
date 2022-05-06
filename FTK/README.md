@@ -1,6 +1,6 @@
 # XML Transformer for FTK to ArchivesSpace Transfer
 
-This script transforms the generic XML output of Forensic Toolkit into a JSON file that can be easily ingested by an ArchivesSpace plugin. The JSON file captures series/file hierarchies, series titles, and file extents, all of which are imported to ArchiveSpace. 
+This script transforms the generic XML output of Forensic Toolkit into a JSON file that can be easily ingested by an ArchivesSpace plugin. The JSON file captures series/file hierarchies, series titles, and file extents, all of which are imported to ArchivesSpace. 
 
 ## Dependencies
 
@@ -8,7 +8,7 @@ This script uses the lxml library to parse XML files from FTK. lxml can be insta
 
 	pip install lxml
 
-More information on lxml can be at [https://lxml.de/index.html]. 
+More information on lxml can be found at [https://lxml.de/index.html]. 
 
 Otherwise, the script only uses the built-in Python libraries. It was written with Python 3.8.5.
 
@@ -20,30 +20,31 @@ The JSON output has a title, child structure, where the final entry is the exten
 
 		{
 			'title' : 'Series I : Photographs',
-			'children' : [{'title' : 'ER 1', 'file_count' : 1}, {}, {}]
+			'children' : [{'title' : 'ER 1', 'file_count' : 1}, {'title' : 'ER2', 'file_count' : 2}]
 		}
 
 ## XML Parsing
 
-The script functions by parsing and transforming a generic (not EAD) XML output. This means to make strong assumptions about where to look for information. It is possible that some configurations for FTK outputs will not include this information. This implementation of lxml uses the XPATH library to parse XML paths. For the script to work, the following information must be found in the following locations: 
-
- 	'/fo:root/fo:page-sequence[@master-reference="TOC"]/fo:flow'
+The script functions by parsing and transforming a generic (not EAD) XML output. This means it makes strong assumptions about where to look for information. It is possible that some configurations for FTK outputs will not include this information. This implementation of lxml uses the XPATH library to parse XML paths. For the script to work, the following information must be found in the following locations: 
 
  The script expects to find the record title and a page indentation for each block in the table of contents ("TOC"). 
 
+ 	'/fo:root/fo:page-sequence[@master-reference="TOC"]/fo:flow'
+
+ The script expects to find a "ref-id" tag starting with "bk" here. 
+
  	con't from above: 'fo:basic-link/fo:page-number-citation'
-
- The script expects to find a 'ref-id' tag starting with "bk" here. 
-
- 	'/fo:root/fo:page-sequence[@master-reference="bookmarksPage"]/fo:flow/fo:table[@id]'
 
  The script expects to find the extent information for each individual file in a record here. It looks for an 'id' tag and a regular expression match with the logical size in bytes expressed as 1000 B.
 
- 	'/fo:root/fo:page-sequence[@master-reference="caseInfoPage"]/fo:flow/fo:table/fo:table-body/fo:table-row/fo:table-cell/fo:block/text()'
+ 	'/fo:root/fo:page-sequence[@master-reference="bookmarksPage"]/fo:flow/fo:table[@id]'
 
  The script looks here for the collection title. 
 
- Future improvements should consider how to effeciently validate whether the XML file conforms to the script's assumptions. 
+ 	'/fo:root/fo:page-sequence[@master-reference="caseInfoPage"]/fo:flow/fo:table/fo:table-body/fo:table-row/fo:table-cell/fo:block/text()'
+
+
+ Future improvements could consider how to effeciently validate whether the XML file conforms to the script's assumptions. 
 
 
 ## Common Issues
