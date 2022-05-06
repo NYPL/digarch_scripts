@@ -25,7 +25,7 @@ The JSON output has a title, child structure, where the final entry is the exten
 
 ## XML Parsing
 
-The script functions by parsing and transforming a generic (not EAD) XML output. This means to make strong assumptions about where to look for information. It is possible that some configurations for FTK outputs will not include this information. For the script to work, the following information must be found in the following locations: 
+The script functions by parsing and transforming a generic (not EAD) XML output. This means to make strong assumptions about where to look for information. It is possible that some configurations for FTK outputs will not include this information. This implementation of lxml uses the XPATH library to parse XML paths. For the script to work, the following information must be found in the following locations: 
 
  	'/fo:root/fo:page-sequence[@master-reference="TOC"]/fo:flow'
 
