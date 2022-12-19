@@ -4,61 +4,64 @@ import re
 import time
 import argparse
 import os
+import pathlib
 
-'''
-This global variable is the namespace for the FTK output XML
-'''
+# Namespace for the FTK output XML
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
 
 def _make_parser():
 
-    def validate_file_input(f):
-
+    def validate_file_input(f) -> pathlib.Path:
         '''
-        This script checks if the input file exists.
-        Leaving the XML check out means the
-        the script will work with .fo reports.
+        Ensure the input file exists
         '''
 
-        if not os.path.exists(f):
+        path = pathlib.Path(f)
+
+        if not path.exists():
             raise argparse.ArgumentTypeError(
-            f'Directory or file does not exist: {f}'
+                f'Directory or file does not exist: {f}'
             )
-        # if f.split(sep=".")[-1].lower() != "xml":
-        #     raise argparse.ArgumentTypeError(
-        #     'Not a valid file type. Please use XML.'
-        # )
-        return f
 
-    def validate_output(f):
-
-        if not os.path.exists(f): 
+        if not path.suffix.lower() in ['.xml', '.fo']:
             raise argparse.ArgumentTypeError(
-            f'Target directory does not exist: {f}'
+                'Not a valid file type. Expect .xml or .fo'
             )
-        return f
+
+        return path
+
+    def validate_output_dir(f) -> pathlib.Path:
+
+        path = pathlib.Path(f)
+
+        if not path.exists():
+            raise argparse.ArgumentTypeError(
+                f'Output directory does not exist: {f}'
+            )
+
+        return path
 
 
-    parser = argparse.ArgumentParser(description='Create a JSON report from XML')
-
-    '''
-    Note that the output argument is required because of how the script
-    formats the file name 
-    '''
-
-    parser.add_argument(
-        "file", 
-        help="a path to valid XML",
-        type=validate_file_input
+    parser = argparse.ArgumentParser(
+        description='Create a JSON report from XML'
     )
+
     parser.add_argument(
-        "output",
+        '-f', '--file',
+        help="path to FTK XML report",
+        type=validate_file_input,
+        required=True
+    )
+
+    parser.add_argument(
+        '-o', 'output',
         help="destination directory",
-        type=validate_output
+        type=validate_output_dir,
+        required=True
     )
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
+
 
 def make_list_from_xml(tree):
 
@@ -66,7 +69,7 @@ def make_list_from_xml(tree):
     This transforms the table of contents into a list of lists
     where each list item has a title, indentation as int, and reference-id.
     This list is the intermediate data structure used to build the nested dict.
-    The function returns the entire list. 
+    The function returns the entire list.
     '''
 
     tree = tree.xpath('/fo:root/fo:page-sequence[@master-reference="TOC"]/fo:flow', namespaces=FO_NAMESPACE)
@@ -83,9 +86,9 @@ def make_list_from_xml(tree):
             pass
         else:
             x = [child.text, int(child.get("start-indent").split(sep="pt")[0])]
-            
+
             # the ref-id tag is located deeper in the XML tree
-            # in the page-number-citation 
+            # in the page-number-citation
 
             if child.xpath('fo:basic-link/fo:page-number-citation', namespaces=FO_NAMESPACE):
                 y = child.xpath('fo:basic-link/fo:page-number-citation', namespaces=FO_NAMESPACE)
@@ -98,17 +101,17 @@ def make_list_from_xml(tree):
 
     p = ["Placeholder", 36, 'ref-id']
 
-    xml_list.append(p)        
-    
+    xml_list.append(p)
+
     return xml_list
 
 def generate_report(tree, xml_list):
-    
+
     '''
-    appends extent information to the 
+    appends extent information to the
     item in the list with the corresponding id
     if that item is an "ER" at the file level.
-    returns the list with this new information appended. 
+    returns the list with this new information appended.
     the information appended is the is the record's information:
     name, number, id, file size, and file count.
     '''
@@ -138,7 +141,7 @@ def transform_xml_tree(tree):
     into a string. this string contains all the extent information
     that will be calculated later.
     the return is a list of lists where the first item is the id with
-    the prefix bk and the second item is a string serialized from the XML. 
+    the prefix bk and the second item is a string serialized from the XML.
     '''
 
     extents = []
@@ -194,7 +197,7 @@ def get_file_size(extent_list, bookmark_id):
     prefix = bookmark_id.replace('k', 'f')
 
     for i in range(len(extent_list)):
-    
+
         if prefix in extent_list[i][0]:
 
             # within the table row the file size is stored as digits followed by
@@ -202,9 +205,9 @@ def get_file_size(extent_list, bookmark_id):
 
             table_info = extent_list[i][1].decode("utf-8")
             logical = re.findall(r'\d+\s[B]', table_info)
-            
+
             # files that are not recognized do not return a logical size
-            # and will cause errors unless they are ignored 
+            # and will cause errors unless they are ignored
 
             if len(logical) == 0:
 
@@ -214,16 +217,16 @@ def get_file_size(extent_list, bookmark_id):
                 file_size = int(logical[0].split(" ")[0])
                 total_size += file_size
                 file_count += 1
-    
+
     extent.append(total_size)
     extent.append(file_count)
-    
+
     return extent
 
 def append_val_to_xml_list(extent, xml_list):
 
     '''
-    an example dict appended would be 
+    an example dict appended would be
     {'er_number': 'ER 10', 'er_name': 'Urban Bush Women, 2003-2011',
     'bookmark_id': 'bk156001', 'logical_size': 421128, 'file_count': 8}
     because of this transformation "ER" records have a dict
@@ -241,11 +244,11 @@ def make_series(xml_list, level=0):
     recursive function that iterates through the xml_list
     and nests records based on their level
     which is derived from the indentation.
-    Returns nested dict with duplicate records. 
+    Returns nested dict with duplicate records.
     '''
 
     result = {}
-    
+
 
     for i in range(len(xml_list)):
 
@@ -282,14 +285,14 @@ def make_series(xml_list, level=0):
 
                 new_dict = make_series(xml_list[i+1:], level=next_l)
                 nest_dict(result, key, new_dict, level)
-                
+
         elif next_l < level:
 
             # this will nest file level information
 
             nest_dict(result, key, val, level)
             return result
-            
+
         else:
 
             # this will nest file level information
@@ -301,11 +304,11 @@ def make_series(xml_list, level=0):
 def nest_dict(data, key, val, level):
 
     '''
-        evaluates if the value is an empty dict or extent information 
-        and creates dict key value pairs accordingly. 
+        evaluates if the value is an empty dict or extent information
+        and creates dict key value pairs accordingly.
     '''
 
-    # in this case val is an empty dict 
+    # in this case val is an empty dict
 
     if type(key[2]) is str:
 
@@ -352,13 +355,13 @@ def filter_dupes(data, l):
     to the anticipated level for that depth. Function assumed that the first level
     it encounters is the correct level for that evaluation.
     For the first level, all records should have a level of 24, the next
-    level -- 36, etc. each id should only occur once in the resulting dict. 
+    level -- 36, etc. each id should only occur once in the resulting dict.
     '''
 
     for key in data.keys():
             if "level" in key:
                 if data[key] == l:
-                    
+
                     del_keys = []
 
                     for key in data.keys():
@@ -371,9 +374,9 @@ def filter_dupes(data, l):
                         data.pop("title_"+bad_key)
                         data.pop("children_"+bad_key)
                         data.pop("level_"+bad_key)
-                    
+
                     return data
-                                
+
                 elif data[key] < l:
 
                     prefix = key.split("_")[1]
@@ -382,18 +385,18 @@ def filter_dupes(data, l):
                         if prefix in key:
                             if "child" in key:
                                 filter_dupes(data[key], l)
-                    
+
                 else:
-                    
+
                     pass
-                
-                
+
+
 def get_collection_children(data, coll):
-    
+
     '''
-        recursive function that reformats the dict to prepare it for import into archivesspace. 
+        recursive function that reformats the dict to prepare it for import into archivesspace.
         adds each pair of keys and values with the same unique suffix as a dict with
-        generic key val names to a list under the 'children' key. 
+        generic key val names to a list under the 'children' key.
         returns a dict with the structure 'title' : series title, 'children' --> list of dicts.
         If file level, child dict does not have children but has all extent information.
         Returns a new dict with data structured this way.
@@ -416,7 +419,7 @@ def get_collection_children(data, coll):
                 prefixes.append(prefix)
         else:
             pass
-    
+
     # for each prefix makes a new dict, fills it with the correct data types
     # and appends it in the style of a 'title' : title, 'children' : list
 
@@ -428,32 +431,32 @@ def get_collection_children(data, coll):
                     title = data[key]
                     series["title"] = data[key]
 
-                    # add all the extent information to file level dicts 
+                    # add all the extent information to file level dicts
 
                     if "ER " in series['title']:
-                        
-                        series['bookmark_id'] = data["id_" + prefix] 
-                        series['er_name'] = data["name_" + prefix] 
-                        series['er_number'] = data["num_" + prefix] 
-                        series['file_size'] = data["size_" + prefix] 
-                        series['file_count'] = data["count_" + prefix] 
+
+                        series['bookmark_id'] = data["id_" + prefix]
+                        series['er_name'] = data["name_" + prefix]
+                        series['er_number'] = data["num_" + prefix]
+                        series['file_size'] = data["size_" + prefix]
+                        series['file_count'] = data["count_" + prefix]
 
                 elif "children" in key:
 
                     child = data[key]
-                    
+
                     series['children'] = []
                     [get_collection_children(data[key], {'children' : series['children']})]
 
         coll['children'].append(series)
 
     return coll
-        
+
 def update_collection_title(data, tree):
 
     '''
     Changes the collection title from M_title to the actual collection name
-    as found in the XML report. 
+    as found in the XML report.
     '''
 
     name = str
@@ -467,7 +470,7 @@ def update_collection_title(data, tree):
     for i, txt in enumerate(case_info):
         if txt == "Case Name":
             name = case_info[i+1]
-            
+
     data['title'] = name
 
     return data
@@ -475,9 +478,9 @@ def update_collection_title(data, tree):
 def make_json(destination, report):
 
     '''
-    creates a json file with the name of the collection as the file name 
+    creates a json file with the name of the collection as the file name
     destination is the file path from args parse and report
-    is the collection style dict 
+    is the collection style dict
     '''
 
     name = report['title']
@@ -500,7 +503,7 @@ def main():
     print('Nesting series and subseries ...')
     data = make_series(xml_list)
     print(time.perf_counter())
-    
+
     levels = []
 
     for x in xml_list:
