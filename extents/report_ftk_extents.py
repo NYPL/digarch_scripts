@@ -156,7 +156,10 @@ def transform_xml_tree(tree):
 
     return extents
 
-def get_er_report(extent_list, title, bookmark_id):
+def get_er_report(
+    er_files: list,
+    title: str,
+    bookmark_id: str) -> dict:
 
     '''
     extract er number, er name, byte count, and file count
@@ -165,63 +168,34 @@ def get_er_report(extent_list, title, bookmark_id):
     Returns a dict with the information for extent.
     '''
 
-    report = {}
+    er_report = {}
 
     er_components = title.split(':')
-    report['er_number'] = er_components[0]
-    report['er_name'] = er_components[1].strip()
-    report['bookmark_id'] = bookmark_id
-
-    extent = get_file_size(extent_list, bookmark_id)
-    #extent 0 - file_size, 1 - file count
-    report['file_size'] = extent[0]
-    report['file_count'] = extent[1]
-
-    return report
-
-def get_file_size(extent_list, bookmark_id):
-
-    '''
-    extract the file size by matching the id with
-    the corresponding row in bookmarks table
-    returns a list with the total file size and total file count
-    for the id that was passed. This function has the largest impact on performance.
-    '''
-
-    file_count = 0
-    total_size = 0
-    extent = []
-
-    #the prefix for ids in the table is bf, not bk
+    er_report['er_number'] = er_components[0]
+    er_report['er_name'] = er_components[1].strip()
+    er_report['bookmark_id'] = bookmark_id
+    er_report['file_size'] = 0
+    er_report['file_count'] = 0
 
     prefix = bookmark_id.replace('k', 'f')
+    for entry in er_files:
+        if prefix in entry:
 
-    for i in range(len(extent_list)):
+            # filesize should be stored as a string in the first column
+            # empty files are skipped
 
-        if prefix in extent_list[i][0]:
+            byte_string = entry[1].decode("utf-8")
+            nonzero_bytes = re.match(r'(\d+)\sB', byte_string)
 
-            # within the table row the file size is stored as digits followed by
-            # whitspace, followed by B for bytes. Ex: 100 B.
-
-            table_info = extent_list[i][1].decode("utf-8")
-            logical = re.findall(r'\d+\s[B]', table_info)
-
-            # files that are not recognized do not return a logical size
-            # and will cause errors unless they are ignored
-
-            if len(logical) == 0:
-
+            if nonzero_bytes:
+                file_size = int(nonzero_bytes[1])
+                er_report['file_size'] += file_size
+                er_report['file_count'] += 1
+            else:
                 pass
 
-            else:
-                file_size = int(logical[0].split(" ")[0])
-                total_size += file_size
-                file_count += 1
+    return er_report
 
-    extent.append(total_size)
-    extent.append(file_count)
-
-    return extent
 
 def append_val_to_xml_list(extent, xml_list):
 
