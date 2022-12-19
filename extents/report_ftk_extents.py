@@ -63,7 +63,9 @@ def _make_parser():
     return parser.parse_args()
 
 
-def create_er_list(tree: etree.ElementTree):
+def create_er_list(
+    tree: etree.ElementTree
+) -> list[str, str, str]:
 
     '''
     This transforms the table of contents into a list of lists
@@ -108,7 +110,10 @@ def create_er_list(tree: etree.ElementTree):
     return ers
 
 
-def add_extents_to_ers(tree: etree.ElementTree, er_list: list):
+def add_extents_to_ers(
+    tree: etree.ElementTree,
+    er_list: list
+) -> list[str, int, int]:
 
     '''
     appends extent information to the
@@ -135,7 +140,9 @@ def add_extents_to_ers(tree: etree.ElementTree, er_list: list):
     return ers_with_extents
 
 
-def transform_xml_tree(tree):
+def transform_xml_tree(
+    tree: etree.ElementTree
+) -> list[str, str, str]:
 
     '''
     transforms each row in the 'bookmarksPage' table
@@ -159,9 +166,11 @@ def transform_xml_tree(tree):
 
     return extents
 
+
 def get_er_report(
-    er_files: list,
-    bookmark_id: str) -> dict:
+    er_files: list[str, str, str],
+    bookmark_id: str
+) -> tuple(int, int):
 
     '''
     extract er number, er name, byte count, and file count
@@ -192,7 +201,10 @@ def get_er_report(
     return size, count
 
 
-def create_report(input, report):
+def create_report(
+    input: list[str, int, int],
+    report: dict
+) -> dict:
     if not '/' in input[0]:
         number, name = input[0].split(':', maxsplit=1)
         report['children'].append({
@@ -217,7 +229,7 @@ def create_report(input, report):
     return report
 
 
-def make_json(destination, report):
+def make_json(destination: pathlib.Path, report: dict):
 
     '''
     creates a json file with the name of the collection as the file name
