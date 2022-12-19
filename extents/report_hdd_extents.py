@@ -2,7 +2,6 @@ import argparse
 import os
 import json
 import pathlib
-import logging
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -10,9 +9,9 @@ def parse_args():
     def validate_dir(d):
         path = pathlib.Path(d)
         if not path.exists():
-            raise argparse.ArgumentTypeError(f'Submitted output directory does not exist: {d}')
+            raise argparse.ArgumentTypeError(f'Specified directory does not exist: {d}')
         if not path.is_dir():
-            raise argparse.ArgumentTypeError(f'Submitted output directory is not a directory: {d}')
+            raise argparse.ArgumentTypeError(f'Specified path is not a directory: {d}')
 
         return path
 
