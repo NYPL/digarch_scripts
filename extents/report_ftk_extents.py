@@ -54,7 +54,7 @@ def _make_parser():
     )
 
     parser.add_argument(
-        '-o', 'output',
+        '-o', '--output',
         help="destination directory",
         type=validate_output_dir,
         required=True
@@ -63,7 +63,7 @@ def _make_parser():
     return parser.parse_args()
 
 
-def make_list_from_xml(tree):
+def create_er_list(tree: etree.ElementTree):
 
     '''
     This transforms the table of contents into a list of lists
@@ -72,40 +72,49 @@ def make_list_from_xml(tree):
     The function returns the entire list.
     '''
 
-    tree = tree.xpath('/fo:root/fo:page-sequence[@master-reference="TOC"]/fo:flow', namespaces=FO_NAMESPACE)
-    tree = tree[0]
+    tree = tree.xpath(
+        '/fo:root/fo:page-sequence[@master-reference="TOC"]/fo:flow',
+        namespaces=FO_NAMESPACE
+    )[0]
 
-    xml_list = []
+    ers = []
+    hierarchy = []
     for child in tree:
+        print(child.text)
+        # skip rows with an indent < 24
+        if not child.get("start-indent"):
+            continue
 
-        # Rows with an indent < 24 or not indent are not part of the records hierarchy.
-        # The series level starts at indent 24.
+        indent = int(child.get("start-indent").split(sep="pt")[0])
+        level = (indent//12) - 2
 
-        if child.get("start-indent") is None \
-        or int(child.get("start-indent").split(sep="pt")[0]) < 24:
-            pass
-        else:
-            x = [child.text, int(child.get("start-indent").split(sep="pt")[0])]
+        if level >= 0:
+            # build a list of parents based on level
+            if level <= len(hierarchy) - 1:
+                hierarchy = hierarchy[:level]
+            elif level > len(hierarchy) + 1:
+                raise ValueError(
+                    f'Unexpected jump in hierarchy at {child.text}'
+                )
+            hierarchy.append(child.text)
 
-            # the ref-id tag is located deeper in the XML tree
-            # in the page-number-citation
+            # only record if entry is an ER
+            possible_ref = child.xpath(
+                'fo:basic-link/fo:page-number-citation', namespaces=FO_NAMESPACE
+            )
+            if possible_ref:
+                refid = possible_ref[0].get('ref-id')
+                ers.append([hierarchy.copy(), level, refid])
 
-            if child.xpath('fo:basic-link/fo:page-number-citation', namespaces=FO_NAMESPACE):
-                y = child.xpath('fo:basic-link/fo:page-number-citation', namespaces=FO_NAMESPACE)
-                refid = y[0].get('ref-id')
-                x.append(refid)
+    #add ending slug to simplify recursion
+    ers.append(["Placeholder", 36, 'ref-id'])
 
-            xml_list.append(x)
+    print(ers)
 
-    #p will simplify the logic for the nested dict recursion
+    return ers
 
-    p = ["Placeholder", 36, 'ref-id']
 
-    xml_list.append(p)
-
-    return xml_list
-
-def generate_report(tree, xml_list):
+def generate_report(tree: etree.ElementTree, xml_list: list):
 
     '''
     appends extent information to the
@@ -126,8 +135,8 @@ def generate_report(tree, xml_list):
 
     for record in xml_list:
         bookmark_id = record[2]
-        bookmark_title = record[0]
-        r = re.match("ER", record[0])
+        bookmark_title = record[0][-1]
+        r = re.match("ER", record[0][-1])
         if r:
             append_val_to_xml_list(get_er_report(extent_list, bookmark_title, bookmark_id), xml_list)
         else:
@@ -467,9 +476,10 @@ def main():
     args = _make_parser()
     print("Parsing XML ...")
     tree = etree.parse(args.file)
+    print(dir(tree))
     print(time.perf_counter())
     print('Transforming XML into a list ...')
-    xml_list = make_list_from_xml(tree)
+    xml_list = create_er_list(tree)
     print(time.perf_counter())
     print('Calculating extents for each file ...')
     xml_list = generate_report(tree, xml_list)
