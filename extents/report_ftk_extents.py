@@ -80,7 +80,6 @@ def create_er_list(tree: etree.ElementTree):
     ers = []
     hierarchy = []
     for child in tree:
-        print(child.text)
         # skip rows with an indent < 24
         if not child.get("start-indent"):
             continue
@@ -102,19 +101,14 @@ def create_er_list(tree: etree.ElementTree):
             possible_ref = child.xpath(
                 'fo:basic-link/fo:page-number-citation', namespaces=FO_NAMESPACE
             )
-            if possible_ref:
+            if possible_ref and hierarchy[-1].startswith('ER'):
                 refid = possible_ref[0].get('ref-id')
                 ers.append([hierarchy.copy(), level, refid])
-
-    #add ending slug to simplify recursion
-    ers.append(["Placeholder", 36, 'ref-id'])
-
-    print(ers)
 
     return ers
 
 
-def generate_report(tree: etree.ElementTree, xml_list: list):
+def add_extents_to_ers(tree: etree.ElementTree, er_list: list):
 
     '''
     appends extent information to the
@@ -131,17 +125,15 @@ def generate_report(tree: etree.ElementTree, xml_list: list):
         namespaces=FO_NAMESPACE
     )
 
-    extent_list = transform_xml_tree(extent_tree)
+    file_list = transform_xml_tree(extent_tree)
+    ers_with_extents = []
 
-    for record in xml_list:
-        bookmark_id = record[2]
-        bookmark_title = record[0][-1]
-        r = re.match("ER", record[0][-1])
-        if r:
-            append_val_to_xml_list(get_er_report(extent_list, bookmark_title, bookmark_id), xml_list)
-        else:
-            continue
-    return xml_list
+    for er in er_list:
+        bookmark_id = er[2]
+        size, count = get_er_report(file_list, bookmark_id)
+        ers_with_extents.append(['/'.join(er[0]), size, count])
+    return ers_with_extents
+
 
 def transform_xml_tree(tree):
 
@@ -159,7 +151,9 @@ def transform_xml_tree(tree):
         #row is an /fo:row in /fo:table[@id]
 
         y = []
-        y.append(row.get('id'))
+        file_id=row.get('id')
+        y.append(file_id)
+        y.append(file_id.split('_')[0])
         y.append(etree.tostring(row, method='text', encoding="UTF-8"))
         extents.append(y)
 
@@ -167,7 +161,6 @@ def transform_xml_tree(tree):
 
 def get_er_report(
     er_files: list,
-    title: str,
     bookmark_id: str) -> dict:
 
     '''
@@ -177,14 +170,8 @@ def get_er_report(
     Returns a dict with the information for extent.
     '''
 
-    er_report = {}
-
-    er_components = title.split(':')
-    er_report['er_number'] = er_components[0]
-    er_report['er_name'] = er_components[1].strip()
-    er_report['bookmark_id'] = bookmark_id
-    er_report['file_size'] = 0
-    er_report['file_count'] = 0
+    size = 0
+    count = 0
 
     prefix = bookmark_id.replace('k', 'f')
     for entry in er_files:
@@ -192,34 +179,17 @@ def get_er_report(
 
             # filesize should be stored as a string in the first column
             # empty files are skipped
-
-            byte_string = entry[1].decode("utf-8")
-            nonzero_bytes = re.match(r'(\d+)\sB', byte_string)
+            byte_string = entry[2].decode("utf-8")
+            nonzero_bytes = re.findall(r'(\d+)\sB', byte_string)
 
             if nonzero_bytes:
-                file_size = int(nonzero_bytes[1])
-                er_report['file_size'] += file_size
-                er_report['file_count'] += 1
+                file_size = int(nonzero_bytes[0])
+                size += file_size
+                count += 1
             else:
                 pass
 
-    return er_report
-
-
-def append_val_to_xml_list(extent, xml_list):
-
-    '''
-    an example dict appended would be
-    {'er_number': 'ER 10', 'er_name': 'Urban Bush Women, 2003-2011',
-    'bookmark_id': 'bk156001', 'logical_size': 421128, 'file_count': 8}
-    because of this transformation "ER" records have a dict
-    as the third value. Series and subseries have a string value.
-    '''
-
-    for item in xml_list:
-        bk_id = item[2]
-        if bk_id == extent['bookmark_id']:
-            item[2] = extent
+    return size, count
 
 def make_series(xml_list, level=0):
 
@@ -476,13 +446,13 @@ def main():
     args = _make_parser()
     print("Parsing XML ...")
     tree = etree.parse(args.file)
-    print(dir(tree))
     print(time.perf_counter())
     print('Transforming XML into a list ...')
     xml_list = create_er_list(tree)
     print(time.perf_counter())
     print('Calculating extents for each file ...')
-    xml_list = generate_report(tree, xml_list)
+    xml_list = add_extents_to_ers(tree, xml_list)
+    print(xml_list)
     print(time.perf_counter())
     print('Nesting series and subseries ...')
     data = make_series(xml_list)
