@@ -65,11 +65,11 @@ def _make_parser():
 
 def create_er_list(
     tree: etree.ElementTree
-) -> list[str, str, str]:
+) -> list[list[str, str]]:
 
     '''
     This transforms the table of contents into a list of lists
-    where each list item has a title, indentation as int, and reference-id.
+    where each list item has the hierarchy of titles and a reference-id.
     This list is the intermediate data structure used to build the nested dict.
     The function returns the entire list.
     '''
@@ -105,23 +105,23 @@ def create_er_list(
             )
             if possible_ref and hierarchy[-1].startswith('ER'):
                 refid = possible_ref[0].get('ref-id')
-                ers.append([hierarchy.copy(), level, refid])
+                ers.append(
+                    ['/'.join(hierarchy.copy()), refid]
+                )
 
     return ers
 
 
-def add_extents_to_ers(
-    tree: etree.ElementTree,
-    er_list: list
-) -> list[str, int, int]:
+def transform_bookmark_tables(
+    tree: etree.ElementTree
+) -> list[list[str, str, str]]:
 
     '''
-    appends extent information to the
-    item in the list with the corresponding id
-    if that item is an "ER" at the file level.
-    returns the list with this new information appended.
-    the information appended is the is the record's information:
-    name, number, id, file size, and file count.
+    transforms each row in the 'bookmarksPage' table
+    into a string. this string contains all the extent information
+    that will be summarized later.
+    the return is a list of lists where the first item is the id with
+    the prefix bk and the second item is a string serialized from the XML.
     '''
 
     extent_tree = tree.xpath(
@@ -130,41 +130,38 @@ def add_extents_to_ers(
         namespaces=FO_NAMESPACE
     )
 
-    file_list = transform_xml_tree(extent_tree)
-    ers_with_extents = []
-
-    for er in er_list:
-        bookmark_id = er[2]
-        size, count = get_er_report(file_list, bookmark_id)
-        ers_with_extents.append(['/'.join(er[0]), size, count])
-    return ers_with_extents
-
-
-def transform_xml_tree(
-    tree: etree.ElementTree
-) -> list[str, str, str]:
-
-    '''
-    transforms each row in the 'bookmarksPage' table
-    into a string. this string contains all the extent information
-    that will be calculated later.
-    the return is a list of lists where the first item is the id with
-    the prefix bk and the second item is a string serialized from the XML.
-    '''
-
-    extents = []
-    for row in tree:
+    bookmark_contents = []
+    for row in extent_tree:
 
         #row is an /fo:row in /fo:table[@id]
 
-        y = []
-        file_id=row.get('id')
-        y.append(file_id)
-        y.append(file_id.split('_')[0])
-        y.append(etree.tostring(row, method='text', encoding="UTF-8"))
-        extents.append(y)
+        bookmark_id = row.get('id')
+        id_number = bookmark_id.split('_')[0]
+        file_table = etree.tostring(row, method='text', encoding="UTF-8")
+        bookmark_contents.append([bookmark_id, id_number, file_table])
 
-    return extents
+    return bookmark_contents
+
+
+def add_extents_to_ers(
+    er_list: list[list[str, str]],
+    bookmark_tables: list[list[str, int, int]]
+) -> list[list[str, int, int]]:
+
+    '''
+    summarizes the extent for each ER by
+    correlating the table of contents with the bookmark tables.
+    Returns list of lists with hierarchal ER string, file size, and file count.
+    '''
+
+    ers_with_extents = []
+
+    for er in er_list:
+        bookmark_id = er[1]
+        size, count = get_er_report(bookmark_tables, bookmark_id)
+        ers_with_extents.append([er[0], size, count])
+
+    return ers_with_extents
 
 
 def get_er_report(
@@ -173,10 +170,8 @@ def get_er_report(
 ) -> tuple(int, int):
 
     '''
-    extract er number, er name, byte count, and file count
-    title is the record title, starting with ER : Title,
-    and the id is an id with a bk prefix.
-    Returns a dict with the information for extent.
+    extract the total file size and file count for a given bookmark ID
+    Returns a tuple with the file size and file count.
     '''
 
     size = 0
@@ -205,6 +200,13 @@ def create_report(
     input: list[str, int, int],
     report: dict
 ) -> dict:
+
+    '''
+    recursive function to insert a given bookmark into a nested dictionary
+    based on the hierarchy of component titles.
+    Returns a nested dictionary
+    '''
+
     if not '/' in input[0]:
         number, name = input[0].split(':', maxsplit=1)
         report['children'].append({
@@ -229,7 +231,10 @@ def create_report(
     return report
 
 
-def make_json(destination: pathlib.Path, report: dict):
+def make_json(
+    destination: pathlib.Path,
+    report: dict
+) -> None:
 
     '''
     creates a json file with the name of the collection as the file name
@@ -243,18 +248,20 @@ def make_json(destination: pathlib.Path, report: dict):
     with open(os.path.join(destination, f'{name}.json'), 'w') as file:
         json.dump(report, file)
 
-def main():
+
+def main() -> None:
     args = _make_parser()
 
     print('Parsing XML ...')
     tree = etree.parse(args.file)
 
     print('Creating report ...')
-    xml_list = create_er_list(tree)
-    xml_list = add_extents_to_ers(tree, xml_list)
+    ers = create_er_list(tree)
+    bookmark_tables = transform_bookmark_tables(tree)
+    ers_with_extents = add_extents_to_ers(ers, bookmark_tables)
 
     dct = {'title': 'coll', 'children': []}
-    for er in xml_list:
+    for er in ers_with_extents:
         dct = create_report(er, dct)
 
     print("Writing report ...")
