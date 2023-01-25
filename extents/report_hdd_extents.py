@@ -22,9 +22,30 @@ def parse_args():
 
         return path
 
-    parser.add_argument("-d", "--dir",
-                        type = validate_dir,
-                        help = "Path to the parent directory, e.g. M###_FAComponents")
+    def validate_output_dir(f) -> pathlib.Path:
+
+        path = pathlib.Path(f)
+
+        if not path.exists():
+            raise argparse.ArgumentTypeError(
+                f'Output directory does not exist: {f}'
+            )
+
+        return path
+
+    parser.add_argument(
+        "-d", "--dir",
+        type = validate_dir,
+        help = "Path to the parent directory, e.g. M###_FAComponents",
+        required = True
+    )
+
+    parser.add_argument(
+        '-o', '--output',
+        help="report destination directory",
+        type=validate_output_dir,
+        required=True
+    )
 
     return parser.parse_args()
 
@@ -87,7 +108,8 @@ def main():
         dct = create_report(er, dct)
 
     print('writing report')
-    with open('test.json', 'w') as f:
+    report_file = args.output.joinpath(f'{args.dir.name}.json')
+    with open(report_file, 'w') as f:
         json.dump(dct, f)
 
 if __name__=="__main__":
