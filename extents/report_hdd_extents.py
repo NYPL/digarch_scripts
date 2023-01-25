@@ -3,15 +3,22 @@ import os
 import json
 import pathlib
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    def validate_dir(d):
+    def validate_dir(
+        d: str
+    ) -> pathlib.Path:
         path = pathlib.Path(d)
         if not path.exists():
-            raise argparse.ArgumentTypeError(f'Specified directory does not exist: {d}')
+            raise argparse.ArgumentTypeError(
+                f'Specified directory does not exist: {d}'
+            )
         if not path.is_dir():
-            raise argparse.ArgumentTypeError(f'Specified path is not a directory: {d}')
+            raise argparse.ArgumentTypeError(
+                f'Specified path is not a directory: {d}'
+            )
 
         return path
 
@@ -22,8 +29,9 @@ def parse_args():
     return parser.parse_args()
 
 
-
-def get_ers(facomponent_dir=pathlib.Path):
+def get_ers(
+    facomponent_dir: pathlib.Path
+) -> list[str, int, int]:
     ers = []
     for possible_er in facomponent_dir.glob('**/ER *'):
         if possible_er.is_dir():
@@ -39,7 +47,10 @@ def get_ers(facomponent_dir=pathlib.Path):
     return ers
 
 
-def create_report(input, report):
+def create_report(
+    input: list[str, int, int],
+    report: dict
+) -> dict:
     if not '/' in input[0]:
         number, name = input[0].split('.', maxsplit=1)
         report['children'].append({
