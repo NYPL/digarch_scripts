@@ -188,7 +188,7 @@ jenv add /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
 jenv global 1.8
 
 ## Python
-python_version=$(pyenv install --list | sed 's/^  //' | grep -v - | grep -v a | grep -v b | tail -1)
+python_version=$(pyenv install --list | sed 's/^  //' | grep '3.1\d' | grep -v - | grep -v b | tail -1)
 pyenv install $python_version
 pyenv global $python_version
 
@@ -227,7 +227,7 @@ if !(git config --list | grep -q "user.email"); then
 fi
 
 if !(git config --list | grep -q "user.name"); then
-	read -p "Name on Github (\"Grace Hopper\", quotes important): " ghname
+	read -p "Name on Github (\"GraceHopper\", quotes important): " ghname
 	git config --global user.name $ghname
 fi
 
