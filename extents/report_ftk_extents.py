@@ -5,6 +5,9 @@ import time
 import argparse
 import os
 import pathlib
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 # Namespace for the FTK output XML
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
@@ -159,6 +162,13 @@ def add_extents_to_ers(
     for er in er_list:
         bookmark_id = er[1]
         size, count = get_er_report(bookmark_tables, bookmark_id)
+
+        if count == 0:
+            er_name = er[0].split('/')[-1]
+            LOGGER.warning(
+                f'{er_name} does not contain any files. It will be omitted from the report.')
+            continue
+
         ers_with_extents.append([er[0], size, count])
 
     return ers_with_extents
