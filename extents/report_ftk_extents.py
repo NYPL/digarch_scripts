@@ -167,7 +167,7 @@ def add_extents_to_ers(
 def get_er_report(
     er_files: list[str, str, str],
     bookmark_id: str
-) -> tuple(int, int):
+) -> tuple([int, int]):
 
     '''
     extract the total file size and file count for a given bookmark ID
