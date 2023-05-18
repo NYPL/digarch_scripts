@@ -240,10 +240,26 @@ def create_report(
 
     return report
 
+def update_collection_title(tree):
+
+    name = str
+
+    case_info = tree.xpath(
+        '/fo:root/fo:page-sequence[@master-reference="caseInfoPage"]/fo:flow/fo:table'\
+        '/fo:table-body/fo:table-row/fo:table-cell/fo:block/text()',
+        namespaces=FO_NAMESPACE
+    )
+
+    for i, txt in enumerate(case_info):
+        if txt == "Case Name":
+            collname = case_info[i+1]
+
+    return collname
 
 def make_json(
     destination: pathlib.Path,
-    report: dict
+    report: dict,
+    collname
 ) -> None:
 
     '''
@@ -252,7 +268,7 @@ def make_json(
     is the collection style dict
     '''
 
-    name = report['title']
+    name = collname
     name = name.replace(" ", "_")
 
     with open(os.path.join(destination, f'{name}.json'), 'w') as file:
@@ -269,13 +285,13 @@ def main() -> None:
     ers = create_er_list(tree)
     bookmark_tables = transform_bookmark_tables(tree)
     ers_with_extents = add_extents_to_ers(ers, bookmark_tables)
-
-    dct = {'title': 'coll', 'children': []}
+    colltitle = update_collection_title(tree)
+    dct = {'title': colltitle, 'children': []}
     for er in ers_with_extents:
         dct = create_report(er, dct)
 
     print("Writing report ...")
-    make_json(args.output, dct)
+    make_json(args.output, dct, colltitle)
 
 if __name__ == '__main__':
     main()
