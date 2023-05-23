@@ -240,9 +240,9 @@ def create_report(
 
     return report
 
-def update_collection_title(tree):
-
-    name = str
+def extract_collection_title(
+    tree: etree.ElementTree
+    ) -> str:
 
     case_info = tree.xpath(
         '/fo:root/fo:page-sequence[@master-reference="caseInfoPage"]/fo:flow/fo:table'\
@@ -285,7 +285,7 @@ def main() -> None:
     ers = create_er_list(tree)
     bookmark_tables = transform_bookmark_tables(tree)
     ers_with_extents = add_extents_to_ers(ers, bookmark_tables)
-    colltitle = update_collection_title(tree)
+    colltitle = extract_collection_title(tree)
     dct = {'title': colltitle, 'children': []}
     for er in ers_with_extents:
         dct = create_report(er, dct)
