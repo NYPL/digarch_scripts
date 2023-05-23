@@ -137,10 +137,10 @@ def test_warn_on_no_bytes_in_er(parsed_report):
 
 def test_extract_collection_name_from_report(parsed_report):
     """Test if collection name is taken from XML"""
-    #coll_name = rfe.somefunction(parsedreport)
+    ers = rfe.create_er_list(parsed_report)
+    coll_name = rfe.update_collection_title(ers)
 
-    #assert coll_name == 'Test Extents'
-    assert False
+    assert coll_name == 'Extents Test' 
 
 @pytest.fixture
 def ers_with_extents_list(parsed_report):
