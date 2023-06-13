@@ -126,26 +126,39 @@ def test_json_objects_contains_expected_fields(extracted_ers):
 
     assert False
 
-def test_skipped_ER_number_behavior(arranged_collection):
-    ers = rhe.audit_ers(arranged_collection)
+def test_skipped_ER_number_behavior(arranged_collection, caplog):
+    ers = rhe.get_ers(arranged_collection)
+    rhe.audit_ers(arranged_collection)
 
-    # what should script do if an ER number is skipped?
     # log warning, but continue operation
-    # Numbers used for ERs are not sequential.
-    # Numbers found: {numbers used}
-    # You may wish to check with the processing archivist
-    assert False
+    log_msg = (
+        'Numbers used for ERs are not sequential.'
+        'Numbers found: 1-12, 23'
+        'You may wish to check with the processing archivist'
+    )
+    assert log_msg in caplog.text
 
-def test_repeated_ER_number_behavior(arranged_collection):
-    ers = rhe.audit_ers(arranged_collection)
+def test_repeated_ER_number_behavior(arranged_collection, caplog):
+    ers = rhe.get_ers(arranged_collection)
 
-    # what should script do if an ER number is skipped?
     # log error, quit script
-    # ER numbering should be unique.
-    # These ERs reuse the same number: {list of ERs}
-    # Ask the processing archivist to renumber the ERs
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        rhe.audit_ers(ers)
 
-    assert False
+    assert pytest_wrapped_e.type == SystemExit
+
+    repeated_ers = [
+        'ER 1 ...',
+        'ER 1 ...'
+    ]
+    log_msg = (
+        'ER numbering should be unique.'
+        f'These ERs reuse the same number: {repeated_ers}'
+        'You may wish to check with the processing archivist'
+    )
+
+    assert log_msg in caplog.text
+
 
 @pytest.fixture
 def expected_json():
