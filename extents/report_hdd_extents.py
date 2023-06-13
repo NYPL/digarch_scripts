@@ -55,11 +55,13 @@ def get_ers(
 ) -> list[str, int, int]:
     ers = []
     for possible_er in facomponent_dir.glob('**/ER *'):
-        if possible_er.is_dir():
+        objects_dir = possible_er.joinpath('objects')
+        if possible_er.is_dir() and objects_dir.is_dir():
+            #
             er = possible_er.relative_to(facomponent_dir)
             size = 0
             count = 0
-            for path, dirs, files in os.walk(possible_er):
+            for path, dirs, files in os.walk(objects_dir):
                 for f in files:
                     count += 1
                     fp = os.path.join(path, f)
@@ -69,6 +71,16 @@ def get_ers(
 
 
 def create_report(
+    input: list[list[str, int, int]],
+    report: dict
+) -> dict:
+    for er in input:
+        report = process_item(er, report)
+
+    return report
+
+
+def process_item(
     input: list[str, int, int],
     report: dict
 ) -> dict:
@@ -86,15 +98,21 @@ def create_report(
         input[0] = child
         for item in report['children']:
             if item['title'] == parent:
-                item = create_report(input, item)
+                item = process_item(input, item)
                 return report
 
         report['children'].append(
-            create_report(input, {'title': parent, 'children': []})
+            process_item(input, {'title': parent, 'children': []})
         )
 
     return report
 
+def write_report(
+    report: dict,
+    dest: pathlib.Path
+) -> None:
+    with open(dest, 'w') as f:
+        json.dump(report, f)
 
 def main():
     args = parse_args()
@@ -103,14 +121,14 @@ def main():
     ers = get_ers(args.dir)
 
     print('creating report')
-    dct = {'title': 'coll', 'children': []}
-    for er in ers:
-        dct = create_report(er, dct)
+    stub_report = {'title': 'coll', 'children': []}
+    full_report = create_report(ers, stub_report)
+
 
     print('writing report')
     report_file = args.output.joinpath(f'{args.dir.name}.json')
-    with open(report_file, 'w') as f:
-        json.dump(dct, f)
+    write_report(full_report, report_file)
+
 
 if __name__=="__main__":
     main()
