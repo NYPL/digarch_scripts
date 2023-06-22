@@ -172,3 +172,4 @@ def test_create_correct_json(extracted_ers, expected_json):
     dct = rhe.create_report(extracted_ers, dct)
 
     assert dct == expected_json
+
