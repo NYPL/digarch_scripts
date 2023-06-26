@@ -81,7 +81,10 @@ def test_correct_report_on_er_with_folder_bookmarked(parsed_report):
     er_with_folder = [['ER 10', 'bk12001']]
     extents = rfe.add_extents_to_ers(er_with_folder, bookmark_tables)
 
-    assert False
+    # bytes
+    assert extents[0][1] == 80
+    # files
+    assert extents[0][2] == 5
 
 def test_correct_report_on_er_with_folder_not_bookmarked(parsed_report):
     """Test if file count and byte count is completed correctly
@@ -91,7 +94,10 @@ def test_correct_report_on_er_with_folder_not_bookmarked(parsed_report):
     er_with_folder = [['ER 3', 'bk11001']]
     extents = rfe.add_extents_to_ers(er_with_folder, bookmark_tables)
 
-    assert False
+    # bytes
+    assert extents[0][1] == 60
+    # files
+    assert extents[0][2] == 5
 
 def test_correct_report_1_file(parsed_report):
     """Test if file count and byte count is completed correctly for one file"""
@@ -100,7 +106,10 @@ def test_correct_report_1_file(parsed_report):
     er_with_one_file = [['ER 2', 'bk9001']]
     extents = rfe.add_extents_to_ers(er_with_one_file, bookmark_tables)
 
-    assert False
+    # bytes
+    assert extents[0][1] == 16
+    # files
+    assert extents[0][2] == 1
 
 def test_warn_on_no_files_in_er(parsed_report, caplog):
     """Test if warning is logged for empty bookmarks and ER is omitted from report"""
