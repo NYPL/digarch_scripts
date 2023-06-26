@@ -115,31 +115,34 @@ def test_warn_on_no_files_in_er(parsed_report, caplog):
     log_msg = f'{er_with_no_files[0][0]} does not contain any files. It will be omitted from the report.'
     assert log_msg in caplog.text
 
-def test_warn_on_a_no_byte_file_in_er(parsed_report):
+def test_warn_on_a_no_byte_file_in_er(parsed_report, caplog):
     """Test if warning is logged for empty files in an ER"""
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
     er_with_no_bytes = [['ER 6: Zero Length, 2023', 'bk28001']]
-    # rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
-    # log warning, script should continue running
-    # 'ER xxx: Title contain zero byte files.'
-    assert False
-
-def test_warn_on_no_bytes_in_er(parsed_report):
+    extents = rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
+    #Log message needs ER name
+    log_msg = f'{er_with_no_bytes[0][0]} contains the following 0-byte file: file00.txt. Review these files with the processing archivist.'
+    assert log_msg in caplog.text
+   
+def test_warn_on_no_bytes_in_er(parsed_report, caplog):
     """Test if warning is logged for bookmarks with 0 bytes total and ER is omitted from report"""
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
     er_with_no_bytes = [['ER 6: Zero Length, 2023', 'bk28001']]
-    # rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
-    # log warning, script should continue running
-    # 'ER xxx: Title does not contain any bytes. It will be omitted from the report'
-    assert False
+    extents = rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
+
+    assert extents == []
+
+    log_msg = f'{er_with_no_bytes[0][0]} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.'
+    assert log_msg in caplog.text
+    
 
 def test_extract_collection_name_from_report(parsed_report):
     """Test if collection name is taken from XML"""
     coll_name = rfe.extract_collection_title(parsed_report)
 
-    assert coll_name == 'Extents Test'
+    assert coll_name == 'Extents Test papers'
 
 @pytest.fixture
 def ers_with_extents_list(parsed_report):

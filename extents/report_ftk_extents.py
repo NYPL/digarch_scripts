@@ -117,7 +117,7 @@ def create_er_list(
 
 def transform_bookmark_tables(
     tree: etree.ElementTree
-) -> list[list[str, str, str]]:
+) -> list[dict]:
 
     '''
     transforms each row in the 'bookmarksPage' table
@@ -135,20 +135,25 @@ def transform_bookmark_tables(
 
     bookmark_contents = []
     for row in extent_tree:
-
         #row is an /fo:row in /fo:table[@id]
-
-        bookmark_id = row.get('id')
-        id_number = bookmark_id.split('_')[0]
-        file_table = etree.tostring(row, method='text', encoding="UTF-8")
-        bookmark_contents.append([bookmark_id, id_number, file_table])
+        file_table = row.xpath(
+            './fo:table-body/fo:table-row/fo:table-cell/fo:block',
+            namespaces=FO_NAMESPACE
+        )
+        file_dict = {
+            file_table[i].text: file_table[i + 1].text
+            for i in range(0, len(file_table), 2)
+        }
+        file_dict['file_id'] = row.get('id')
+        file_dict['bookmark_id'] = row.get('id').split('_')[0]
+        bookmark_contents.append(file_dict)
 
     return bookmark_contents
 
 
 def add_extents_to_ers(
     er_list: list[list[str, str]],
-    bookmark_tables: list[list[str, int, int]]
+    bookmark_tables: list[dict]
 ) -> list[list[str, int, int]]:
 
     '''
@@ -168,6 +173,11 @@ def add_extents_to_ers(
             LOGGER.warning(
                 f'{er_name} does not contain any files. It will be omitted from the report.')
             continue
+        if size == 0:
+            er_name = er[0].split('/')[-1]
+            LOGGER.warning(
+                f'{er_name} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.')
+            continue
 
         ers_with_extents.append([er[0], size, count])
 
@@ -175,7 +185,7 @@ def add_extents_to_ers(
 
 
 def get_er_report(
-    er_files: list[str, str, str],
+    er_files: list[dict],
     bookmark_id: str
 ) -> tuple([int, int]):
 
@@ -189,17 +199,21 @@ def get_er_report(
 
     prefix = bookmark_id.replace('k', 'f')
     for entry in er_files:
-        if prefix in entry:
+        if entry['bookmark_id'] == prefix:
 
-            # filesize should be stored as a string in the first column
-            # empty files are skipped
-            byte_string = entry[2].decode("utf-8")
-            nonzero_bytes = re.findall(r'(\d+)\sB', byte_string)
+            byte_string = entry['Logical Size']
+            bytes = re.findall(r'(\d+)\sB', byte_string)
 
-            if nonzero_bytes:
-                file_size = int(nonzero_bytes[0])
-                size += file_size
+            if bytes:
                 count += 1
+                file_size = int(bytes[0])
+                if file_size == 0:
+                    file_name = entry['Name']
+                    #extract file name, might have to parse file table better
+                    LOGGER.warning(
+                        f'an er contains the following 0-byte file: {file_name}. Review these files with the processing archivist.')
+                size += file_size
+               
             else:
                 pass
 
