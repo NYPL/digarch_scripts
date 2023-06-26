@@ -121,8 +121,7 @@ def test_warn_on_a_no_byte_file_in_er(parsed_report, caplog):
 
     er_with_no_bytes = [['ER 6: Zero Length, 2023', 'bk28001']]
     extents = rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
-    #Log message needs ER name
-    log_msg = f'{er_with_no_bytes[0][0]} contains the following 0-byte file: file00.txt. Review these files with the processing archivist.'
+    log_msg = f'{er_with_no_bytes[0][0]} contains the following 0-byte file: file00.txt. Review this file with the processing archivist.'
     assert log_msg in caplog.text
    
 def test_warn_on_no_bytes_in_er(parsed_report, caplog):

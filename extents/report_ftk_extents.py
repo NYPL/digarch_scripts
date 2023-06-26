@@ -165,16 +165,15 @@ def add_extents_to_ers(
     ers_with_extents = []
 
     for er in er_list:
-        bookmark_id = er[1]
-        size, count = get_er_report(bookmark_tables, bookmark_id)
+        bookmark_id = er[1]            
+        er_name = er[0].split('/')[-1]
+        size, count = get_er_report(bookmark_tables, bookmark_id, er_name)
 
         if count == 0:
-            er_name = er[0].split('/')[-1]
             LOGGER.warning(
                 f'{er_name} does not contain any files. It will be omitted from the report.')
             continue
         if size == 0:
-            er_name = er[0].split('/')[-1]
             LOGGER.warning(
                 f'{er_name} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.')
             continue
@@ -186,7 +185,8 @@ def add_extents_to_ers(
 
 def get_er_report(
     er_files: list[dict],
-    bookmark_id: str
+    bookmark_id: str,
+    er_name: str
 ) -> tuple([int, int]):
 
     '''
@@ -211,7 +211,7 @@ def get_er_report(
                     file_name = entry['Name']
                     #extract file name, might have to parse file table better
                     LOGGER.warning(
-                        f'an er contains the following 0-byte file: {file_name}. Review these files with the processing archivist.')
+                        f'{er_name} contains the following 0-byte file: {file_name}. Review this file with the processing archivist.')
                 size += file_size
                
             else:
