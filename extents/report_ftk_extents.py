@@ -109,10 +109,30 @@ def create_er_list(
             if possible_ref and hierarchy[-1].startswith('ER'):
                 refid = possible_ref[0].get('ref-id')
                 ers.append(
-                    ['/'.join(hierarchy.copy()), refid]
+                    ['/'.join(hierarchy.copy()), refid, hierarchy[-1]]
                 )
 
+    audit_ers(ers)
+
     return ers
+
+
+def audit_ers(ers: list[list[str, str, str]]) -> None:
+    er_numbers_used = {}
+    for er in ers:
+        number = re.match(r'ER (\d+):', er[2])
+
+        if not number[1] in er_numbers_used.keys():
+            er_numbers_used[number[1]] = [er[2]]
+        else:
+            er_numbers_used[number[1]].append(er[2])
+
+    for er_number, er_names in er_numbers_used.items():
+        if len(er_names) > 1:
+            LOGGER.warning(
+                f'ER {er_number} is used multiple times: {", ".join(er_names)}. Review the ERs with the processing archivist'
+            )
+    return None
 
 
 def transform_bookmark_tables(
@@ -165,7 +185,7 @@ def add_extents_to_ers(
     ers_with_extents = []
 
     for er in er_list:
-        bookmark_id = er[1]            
+        bookmark_id = er[1]
         er_name = er[0].split('/')[-1]
         size, count = get_er_report(bookmark_tables, bookmark_id, er_name)
 
@@ -213,7 +233,7 @@ def get_er_report(
                     LOGGER.warning(
                         f'{er_name} contains the following 0-byte file: {file_name}. Review this file with the processing archivist.')
                 size += file_size
-               
+
             else:
                 pass
 
@@ -297,6 +317,7 @@ def main() -> None:
 
     print('Creating report ...')
     ers = create_er_list(tree)
+
     bookmark_tables = transform_bookmark_tables(tree)
     ers_with_extents = add_extents_to_ers(ers, bookmark_tables)
     colltitle = extract_collection_title(tree)

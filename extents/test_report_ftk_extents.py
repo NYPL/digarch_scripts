@@ -132,7 +132,7 @@ def test_warn_on_a_no_byte_file_in_er(parsed_report, caplog):
     extents = rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
     log_msg = f'{er_with_no_bytes[0][0]} contains the following 0-byte file: file00.txt. Review this file with the processing archivist.'
     assert log_msg in caplog.text
-   
+
 def test_warn_on_no_bytes_in_er(parsed_report, caplog):
     """Test if warning is logged for bookmarks with 0 bytes total and ER is omitted from report"""
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
@@ -144,13 +144,13 @@ def test_warn_on_no_bytes_in_er(parsed_report, caplog):
 
     log_msg = f'{er_with_no_bytes[0][0]} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.'
     assert log_msg in caplog.text
-    
+
 
 def test_extract_collection_name_from_report(parsed_report):
     """Test if collection name is taken from XML"""
     coll_name = rfe.extract_collection_title(parsed_report)
 
-    assert coll_name == 'Extents Test papers'
+    assert coll_name == 'M12345 Extents Test'
 
 @pytest.fixture
 def ers_with_extents_list(parsed_report):
@@ -171,11 +171,11 @@ def test_skipped_ER_number_behavior(parsed_report):
     # what should script do if an ER number is skipped?
     assert False
 
-def test_repeated_ER_number_behavior(parsed_report):
+def test_repeated_ER_number_behavior(parsed_report, caplog):
     ers = rfe.create_er_list(parsed_report)
 
-    # what should script do if an ER number is skipped?
-    assert False
+    log_msg = f': ER 10: File 21,2023, ER 10: Folder 2, 2023. Review the ERs with the processing archivist'
+    assert log_msg in caplog.text
 
 @pytest.fixture
 def expected_json():
