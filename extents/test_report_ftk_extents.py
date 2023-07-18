@@ -163,7 +163,31 @@ def ers_with_extents_list(parsed_report):
 def test_json_objects_contains_expected_fields(ers_with_extents_list):
     """Test if final report aligns with expectations for ASpace import"""
 
-    assert False
+    full_dict = {'title': 'slug', 'children': []}
+    for er in ers_with_extents_list:
+        print
+        rfe.create_report(er, full_dict)
+
+    def recursive_validator(er_dict):
+        for key, value in er_dict.items():
+            if key == 'title':
+                assert type(value) is str
+            elif key == 'children':
+                assert type(value) is list
+                for child in value:
+                    recursive_validator(child)
+            elif key == 'er_number':
+                assert type(value) is str
+            elif key == 'er_name':
+                assert type(value) is str
+            elif key == 'file_size':
+                assert type(value) is int
+            elif key == 'file_number':
+                assert type(value) is int
+            else:
+                assert False
+
+    recursive_validator(full_dict)
 
 def test_skipped_ER_number_behavior(parsed_report, caplog):
     """Test if script flags when ER numbering is not sequential"""
