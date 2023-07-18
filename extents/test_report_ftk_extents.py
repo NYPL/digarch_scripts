@@ -165,16 +165,20 @@ def test_json_objects_contains_expected_fields(ers_with_extents_list):
 
     assert False
 
-def test_skipped_ER_number_behavior(parsed_report):
+def test_skipped_ER_number_behavior(parsed_report, caplog):
+    """Test if script flags when ER numbering is not sequential"""
     ers = rfe.create_er_list(parsed_report)
 
-    # what should script do if an ER number is skipped?
-    assert False
+    for i in range(13, 23):
+        assert f'Collection uses ER 1 to ER 23. ER {i} is skipped. Review the ERs with the processing archivist' in caplog.text
 
 def test_repeated_ER_number_behavior(parsed_report, caplog):
+    """Test if script flags when ER number is reused"""
     ers = rfe.create_er_list(parsed_report)
 
-    log_msg = f': ER 10: File 21,2023, ER 10: Folder 2, 2023. Review the ERs with the processing archivist'
+    rfe.audit_ers(ers)
+
+    log_msg = f'ER 10 is used multiple times: ER 10: File 21,2023, ER 10: Folder 2, 2023. Review the ERs with the processing archivist'
     assert log_msg in caplog.text
 
 @pytest.fixture
