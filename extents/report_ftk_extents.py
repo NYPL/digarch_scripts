@@ -121,17 +121,28 @@ def audit_ers(ers: list[list[str, str, str]]) -> None:
     er_numbers_used = {}
     for er in ers:
         number = re.match(r'ER (\d+):', er[2])
-
-        if not number[1] in er_numbers_used.keys():
-            er_numbers_used[number[1]] = [er[2]]
+        er_number = int(number[1])
+        if not er_number in er_numbers_used.keys():
+            er_numbers_used[er_number] = [er[2]]
         else:
-            er_numbers_used[number[1]].append(er[2])
+            er_numbers_used[er_number].append(er[2])
 
+    # test for er number gaps
+    er_min = min(er_numbers_used.keys())
+    er_max = max(er_numbers_used.keys())
+    for i in range(er_min, er_max):
+        if i not in er_numbers_used.keys():
+            LOGGER.warning(
+                f'Collection uses ER {er_min} to ER {er_max}. ER {i} is skipped. Review the ERs with the processing archivist'
+            )
+
+    # test for duplicate ers
     for er_number, er_names in er_numbers_used.items():
         if len(er_names) > 1:
             LOGGER.warning(
                 f'ER {er_number} is used multiple times: {", ".join(er_names)}. Review the ERs with the processing archivist'
             )
+
     return None
 
 
