@@ -165,7 +165,6 @@ def test_json_objects_contains_expected_fields(ers_with_extents_list):
 
     full_dict = {'title': 'slug', 'children': []}
     for er in ers_with_extents_list:
-        print
         rfe.create_report(er, full_dict)
 
     def recursive_validator(er_dict):
