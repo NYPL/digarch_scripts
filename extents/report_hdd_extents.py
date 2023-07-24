@@ -66,7 +66,7 @@ def get_ers(
                     count += 1
                     fp = os.path.join(path, f)
                     size += os.path.getsize(fp)
-            ers.append([str(er), size, count])
+            ers.append([str(er), size, count, possible_er.name])
     return ers
 
 
