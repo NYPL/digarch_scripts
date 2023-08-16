@@ -2,7 +2,9 @@ import argparse
 import os
 import json
 import pathlib
-
+import logging
+import re
+LOGGER = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -19,7 +21,7 @@ def parse_args():
             raise argparse.ArgumentTypeError(
                 f'Specified path is not a directory: {d}'
             )
-
+            
         return path
 
     def validate_output_dir(f) -> pathlib.Path:
@@ -65,9 +67,32 @@ def get_ers(
                 for f in files:
                     count += 1
                     fp = os.path.join(path, f)
+                    if os.path.getsize(fp) == 0:
+                        LOGGER.warning(
+                           f'{possible_er.name} contains the following 0-byte file: {f}. Review this file with the processing archivist.')
                     size += os.path.getsize(fp)
-            ers.append([str(er), size, count, possible_er.name])
+        if count == 0:
+            LOGGER.warning(
+                f'{possible_er.name} does not contain any files. It will be omitted from the report.')
+            continue
+        if size == 0:
+            LOGGER.warning(
+                f'{possible_er.name} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.')
+            continue
+         
+        ers.append([str(er), size, count, possible_er.name])
     return ers
+
+def extract_collection_title(hdd_dir: pathlib.Path) -> str:
+    for item in hdd_dir.iterdir():
+        if re.match(r'M\d+\_FAcomponents', item.name):
+            return item.name
+        else:
+            LOGGER.warning(
+                f'Cannot find CollectionID_FAcomponents directory. Please use CollectionID_FAcomponents naming convention for the directory containing all ERs.'
+            )
+
+
 
 
 def create_report(
@@ -121,12 +146,13 @@ def main():
     ers = get_ers(args.dir)
 
     print('creating report')
-    stub_report = {'title': 'coll', 'children': []}
+    colltitle = extract_collection_title(args.dir)
+    stub_report = {'title': colltitle, 'children': []}
     full_report = create_report(ers, stub_report)
 
 
     print('writing report')
-    report_file = args.output.joinpath(f'{args.dir.name}.json')
+    report_file = args.output.joinpath(f'{colltitle}.json')
     write_report(full_report, report_file)
 
 

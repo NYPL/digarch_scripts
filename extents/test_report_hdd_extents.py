@@ -31,22 +31,22 @@ def test_hierarchy_nests_down_correctly(arranged_collection):
     just_titles = [er[0] for er in ers]
     print(just_titles)
 
-    assert 'M12345 Extents Test/Series 1/Subseries(1)/ER 1 Text, 2023' in just_titles
-    assert 'M12345 Extents Test/Series 1/Subseries(1)/Subsubseries(2)/ER 2 File 15, 2023' in just_titles
+    assert 'M12345_FAcomponents/Series 1/Subseries(1)/ER 1 Text, 2023' in just_titles
+    assert 'M12345_FAcomponents/Series 1/Subseries(1)/Subsubseries(2)/ER 2 File 15, 2023' in just_titles
 
 def test_hierarchy_nests_empty_subseries(arranged_collection):
     """Function should include organization hierarchy including empty levels"""
     ers = rhe.get_ers(arranged_collection)
     just_titles = [er[0] for er in ers]
 
-    assert 'M12345 Extents Test/Series 1/Subseries(1)/Subsubseries(2)/Subsubsubseries(3)/Subsubsubsubseries(4)/ER 10 Folder 2, 2023' in just_titles
+    assert 'M12345_FAcomponents/Series 1/Subseries(1)/Subsubseries(2)/Subsubsubseries(3)/Subsubsubsubseries(4)/ER 10 Folder 2, 2023' in just_titles
 
 def test_er_outside_of_series(arranged_collection):
     """Function should include capture ERs even if they're not in a series"""
     ers = rhe.get_ers(arranged_collection)
     just_titles = [er[0] for er in ers]
 
-    assert 'M12345 Extents Test/ER 10 File 21,2023' in just_titles
+    assert 'M12345_FAcomponents/ER 10 File 21,2023' in just_titles
 
 def test_correct_report_many_files(arranged_collection):
     """Test if file count and byte count is completed correctly"""
@@ -125,11 +125,19 @@ def test_warn_on_no_bytes_in_er(arranged_collection, caplog):
     log_msg = f'{er_with_no_bytes} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.'
     assert log_msg in caplog.text
 
-def test_extract_collection_name_from_report(arranged_collection):
+def test_extract_collection_name(arranged_collection):
     """Test if collection name is taken from XML"""
     coll_name = rhe.extract_collection_title(arranged_collection)
 
-    assert coll_name == 'M12345 Extents Test'
+    assert coll_name == 'M12345_FAcomponents'
+ 
+def test_warn_on_bad_collection_name(arranged_collection, caplog):
+    """Test if collection name is taken from XML"""
+    coll_name_folder = arranged_collection / 'M12345_FAcomponents'
+    coll_name_folder.rename(arranged_collection / 'Test_Coll')
+    coll_name = rhe.extract_collection_title(arranged_collection)
+    log_msg = 'Cannot find CollectionID_FAcomponents directory. Please use CollectionID_FAcomponents naming convention for the directory containing all ERs.'
+    assert log_msg in caplog.text
 '''
 def test_skipped_ER_number_behavior(arranged_collection, caplog):
     ers = rhe.get_ers(arranged_collection)
