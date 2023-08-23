@@ -54,7 +54,7 @@ def parse_args():
 
 def get_ers(
     facomponent_dir: pathlib.Path
-) -> list[str, int, int]:
+) -> list[str, int, int, str]:
     ers = []
     for possible_er in facomponent_dir.glob('**/ER *'):
         objects_dir = possible_er.joinpath('objects')
@@ -92,6 +92,33 @@ def extract_collection_title(hdd_dir: pathlib.Path) -> str:
                 f'Cannot find CollectionID_FAcomponents directory. Please use CollectionID_FAcomponents naming convention for the directory containing all ERs.'
             )
 
+def audit_ers(ers: list[list[str, str, str]]) -> None:
+    er_numbers_used = {}
+    for er in ers:
+        number = re.match(r'ER (\d+)', er[3])
+        er_number = int(number[1])
+        if not er_number in er_numbers_used.keys():
+            er_numbers_used[er_number] = [er[3]]
+        else:
+            er_numbers_used[er_number].append(er[3])
+
+    # test for er number gaps
+    er_min = min(er_numbers_used.keys())
+    er_max = max(er_numbers_used.keys())
+    for i in range(er_min, er_max):
+        if i not in er_numbers_used.keys():
+            LOGGER.warning(
+                f'Collection uses ER {er_min} to ER {er_max}. ER {i} is skipped. Review the ERs with the processing archivist'
+            )
+
+    # test for duplicate ers
+    for er_number, er_names in er_numbers_used.items():
+        if len(er_names) > 1:
+            LOGGER.warning(
+                f'ER {er_number} is used multiple times: {", ".join(er_names)}. Review the ERs with the processing archivist'
+            )
+
+    return None
 
 
 
@@ -142,16 +169,16 @@ def write_report(
 def main():
     args = parse_args()
 
-    print('retrieving ER folder paths')
+    LOGGER.info('retrieving ER folder paths')
     ers = get_ers(args.dir)
 
-    print('creating report')
+    LOGGER.info('creating report')
     colltitle = extract_collection_title(args.dir)
     stub_report = {'title': colltitle, 'children': []}
     full_report = create_report(ers, stub_report)
 
 
-    print('writing report')
+    LOGGER.info('writing report')
     report_file = args.output.joinpath(f'{colltitle}.json')
     write_report(full_report, report_file)
 
