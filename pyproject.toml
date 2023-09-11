@@ -8,6 +8,7 @@ packages = [{include = "ipres_package_cloud", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+pytest = "^7.4.2"
 
 
 [build-system]
