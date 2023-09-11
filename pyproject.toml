@@ -10,6 +10,9 @@ packages = [{include = "ipres_package_cloud", from = "src"}]
 python = "^3.11"
 pytest = "^7.4.2"
 
+[tool.poetry.scripts]
+package_cloud = 'ipres_package_cloud.package_cloud:main'
+
 
 [build-system]
 requires = ["poetry-core"]
