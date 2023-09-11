@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "ipres-package-cloud"
+version = "0.1.0"
+description = ""
+authors = ["Nick Krabbenhoeft <nickkrabbenhoeft@nypl.org>"]
+readme = "README.md"
+packages = [{include = "ipres_package_cloud", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
