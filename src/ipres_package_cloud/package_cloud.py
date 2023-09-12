@@ -52,6 +52,31 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+def create_base_dir(dest: Path, id: str) -> Path:
+    print(id)
+    acq_id = id.rsplit("_", 1)[0]
+    package_base = dest / acq_id / id
+    if package_base.exists():
+        raise FileExistsError(f'{package_base} already exists. Make sure you are using the correct ID')
+
+    try:
+        package_base.mkdir(parents = True)
+    except PermissionError:
+        raise PermissionError(f'{dest} is not writable')
+    return package_base
+
+def move_metadata_file():
+    return None
+
+def move_payload():
+    return None
+
+def create_bag_in_payload():
+    return None
+
+def validate_bag_in_payload():
+    return None
+
 def main():
     args = parse_args()
     LOGGER.info("I do not package anything yet")

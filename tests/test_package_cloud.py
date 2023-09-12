@@ -1,6 +1,7 @@
 import ipres_package_cloud.package_cloud as pc
 
 import argparse
+import os
 from pathlib import Path
 import pytest
 import shutil
@@ -44,7 +45,7 @@ def test_requires_args(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFi
 
         stderr = capsys.readouterr().err
 
-        assert args[2*i+1] in stderr
+        assert f'required: {args[2*i+1]}' in stderr
 
 
 def test_arg_paths_must_exist(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, args: list):
@@ -63,7 +64,8 @@ def test_arg_paths_must_exist(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Ca
 
         stderr = capsys.readouterr().err
 
-        assert bad_path in stderr
+        assert f'{bad_path} does not exist' in stderr
+
 
 def test_id_arg_must_match_pattern(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, args: list):
     args[-1] = 'bad_id'
@@ -75,4 +77,42 @@ def test_id_arg_must_match_pattern(monkeypatch: pytest.MonkeyPatch, capsys: pyte
 
     stderr = capsys.readouterr().err
 
-    assert 'bad_id' in stderr
+    assert f'bad_id does not match' in stderr
+
+def test_create_package_basedir_exc_on_readonly(tmp_path, args):
+    id = args[-1]
+    # make folder read-only
+    os.chmod(tmp_path, 0o500)
+
+    with pytest.raises(PermissionError) as exc:
+        pc.create_base_dir(tmp_path, id)
+
+    # change back to allow clean-up (might not be necessary)
+    os.chmod(tmp_path, 0o777)
+    assert f'{str(tmp_path)} is not writable' in str(exc.value)
+
+
+def test_create_package_basedir(tmp_path, args):
+    id = args[-1]
+    base_dir = pc.create_base_dir(tmp_path, args[-1])
+
+    assert base_dir.name == id
+    assert base_dir.parent.name == id[:-7]
+
+def test_create_package_basedir_with_existing_acq_dir(tmp_path, args):
+    id = args[-1]
+    (tmp_path / id[:-7]).mkdir()
+    base_dir = pc.create_base_dir(tmp_path, args[-1])
+
+    assert base_dir.name == id
+    assert base_dir.parent.name == id[:-7]
+
+def test_error_on_existing_package_dir(tmp_path, args):
+    id = args[-1]
+    base_dir = tmp_path / id[:-7] / id
+    base_dir.mkdir(parents=True)
+
+    with pytest.raises(FileExistsError) as exc:
+        pc.create_base_dir(tmp_path, id)
+
+    assert f'{base_dir} already exists. Make sure you are using the correct ID' in str(exc.value)
