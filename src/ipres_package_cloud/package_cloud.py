@@ -1,27 +1,39 @@
 import argparse
 import logging
+from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 
 def parse_args() -> argparse.Namespace:
+    def extant_path(p):
+        path = Path(p)
+        if not path.exists():
+            raise argparse.ArgumentTypeError(f"{path} does not exist")
+        return path
+
+
     parser = argparse.ArgumentParser(
         description='test'
     )
     parser.add_argument(
         '--payload',
-        required=True
+        required=True,
+        type=extant_path
     )
     parser.add_argument(
         '--log',
-        required=True
+        required=True,
+        type=extant_path
     )
     parser.add_argument(
         '--md5',
-        required=True
+        required=True,
+        type=extant_path
     )
     parser.add_argument(
         '--dest',
-        required=True
+        required=True,
+        type=extant_path
     )
     parser.add_argument(
         '--id',

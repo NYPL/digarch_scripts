@@ -45,3 +45,22 @@ def test_requires_args(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFi
         stderr = capsys.readouterr().err
 
         assert args[2*i+1] in stderr
+
+
+def test_arg_paths_must_exist(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, args: list):
+    """Test that script errors if path argument doesn't exist"""
+
+    for i in range(1,5):
+        bad_args = args
+        bad_path = 'nonexistant'
+        bad_args[2*i] = bad_path
+
+        monkeypatch.setattr(
+                'sys.argv', bad_args
+            )
+        with pytest.raises(SystemExit):
+            args = pc.parse_args()
+
+        stderr = capsys.readouterr().err
+
+        assert bad_path in stderr
