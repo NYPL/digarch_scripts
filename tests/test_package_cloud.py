@@ -75,6 +75,7 @@ def test_arg_paths_must_exist(
 def test_id_arg_must_match_pattern(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, args: list
 ):
+    """Test that script errors if id argument doesn't match ACQ_####_######"""
     args[-1] = "bad_id"
     monkeypatch.setattr("sys.argv", args)
     with pytest.raises(SystemExit):
@@ -86,6 +87,8 @@ def test_id_arg_must_match_pattern(
 
 
 def test_create_package_basedir_exc_on_readonly(tmp_path: Path, args: list):
+    """Test that package folder maker reports permission error"""
+
     id = args[-1]
     # make folder read-only
     os.chmod(tmp_path, 0o500)
@@ -99,6 +102,8 @@ def test_create_package_basedir_exc_on_readonly(tmp_path: Path, args: list):
 
 
 def test_create_package_basedir(tmp_path: Path, args: list):
+    """Test that package folder maker makes ACQ and Carrier folders"""
+
     id = args[-1]
     base_dir = pc.create_base_dir(tmp_path, args[-1])
 
@@ -107,6 +112,8 @@ def test_create_package_basedir(tmp_path: Path, args: list):
 
 
 def test_create_package_basedir_with_existing_acq_dir(tmp_path: Path, args: list):
+    """Test that package folder maker respect existing ACQ folder"""
+
     id = args[-1]
     (tmp_path / id[:-7]).mkdir()
     base_dir = pc.create_base_dir(tmp_path, args[-1])
@@ -116,6 +123,8 @@ def test_create_package_basedir_with_existing_acq_dir(tmp_path: Path, args: list
 
 
 def test_error_on_existing_package_dir(tmp_path: Path, args: list):
+    """Test that package folder maker errors if carrier folder exists"""
+
     id = args[-1]
     base_dir = tmp_path / id[:-7] / id
     base_dir.mkdir(parents=True)
@@ -134,6 +143,8 @@ def package_base_dir(tmp_path: Path, args: list):
 
 
 def test_move_metadata(transfer_files: Path, package_base_dir: Path):
+    """Test that metadata folder and log file are moved successfully"""
+
     source_log = transfer_files / "rclone.log"
     pc.move_metadata_file(source_log, package_base_dir)
 
@@ -142,6 +153,8 @@ def test_move_metadata(transfer_files: Path, package_base_dir: Path):
 
 
 def test_do_not_overwrite_metadata(transfer_files: Path, package_base_dir: Path):
+    """Test that log file is not moved if a same name file exists in dest"""
+
     source_log = transfer_files / "rclone.log"
     rclone_log = package_base_dir / "metadata" / "rclone.log"
     rclone_log.parent.mkdir()
@@ -155,6 +168,8 @@ def test_do_not_overwrite_metadata(transfer_files: Path, package_base_dir: Path)
 
 
 def test_move_payload(transfer_files: Path, package_base_dir: Path):
+    """Test that entirety of payload is moved and hierarchy is preserved"""
+
     source_payload = transfer_files / "rclone_files"
     source_contents = [
         file.relative_to(source_payload) for file in source_payload.rglob("*")
@@ -174,6 +189,8 @@ def test_move_payload(transfer_files: Path, package_base_dir: Path):
 
 
 def test_do_not_overwrite_payload(transfer_files: Path, package_base_dir: Path):
+    """Test that no payload file is moved if /data exists"""
+
     source_payload = transfer_files / "rclone_files"
     source_contents = [file for file in source_payload.rglob("*")]
 
@@ -189,15 +206,44 @@ def test_do_not_overwrite_payload(transfer_files: Path, package_base_dir: Path):
 
 
 def test_create_bag(transfer_files: Path, package_base_dir: Path):
+    """Test that all tag files are created and rclone md5sums are correctly converted"""
+
     md5_path = transfer_files / "rclone.md5"
+    bag_path = transfer_files / "objects"
+
+    # might need further testing of the oxum and manifest converter functions
     pc.create_bag_in_objects(md5_path, package_base_dir)
 
-    assert bagit.Bag(package_base_dir).validate(completeness_only=True)
+    assert bagit.Bag(bag_path).validate(completeness_only=True)
 
 
-def test_validate_valid_bag(package_base_dir):
-    assert True
+def test_validate_valid_bag(transfer_files: Path, caplog):
+    """Test the log message"""
+
+    test_bag = bagit.make_bag(transfer_files)
+
+    assert f"{test_bag.path} is valid" in caplog.text
 
 
-def test_validate_invalid_bag(package_base_dir):
-    assert True
+def test_validate_invalid_bag(transfer_files, caplog):
+    """Test the log message if the bag isn't valid for some reason"""
+
+    test_bag = bagit.make_bag(transfer_files)
+    (Path(test_bag.path) / 'data' / 'rclone.log').unlink()
+
+    assert f"{test_bag.path} is not valid. Check the bag manifest and oxum." in caplog.text
+
+
+def test_full_run(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, args: list
+):
+    """Test end to end successful run"""
+
+    monkeypatch.setattr("sys.argv", args)
+    pc.main()
+
+    pkg_dir = Path(args[-3]) / args[-1][:-7] / args[-1]
+    assert pkg_dir.exists()
+    assert bagit.Bag(pkg_dir / 'objects').validate()
+
+    assert 'rclone.log' in [x.name for x in (pkg_dir / 'metadata').iterdir()]
