@@ -16,7 +16,7 @@ def args(transfer_files):
     args = [
         "script_name",
         "--payload",
-        str(transfer_files / 'fixtures' / 'rclone_files'),
+        str(transfer_files / 'rclone_files'),
         "--md5",
         str(transfer_files / 'rclone.md5'),
         "--log",
@@ -64,3 +64,15 @@ def test_arg_paths_must_exist(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Ca
         stderr = capsys.readouterr().err
 
         assert bad_path in stderr
+
+def test_id_arg_must_match_pattern(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, args: list):
+    args[-1] = 'bad_id'
+    monkeypatch.setattr(
+            'sys.argv', args
+        )
+    with pytest.raises(SystemExit):
+        args = pc.parse_args()
+
+    stderr = capsys.readouterr().err
+
+    assert 'bad_id' in stderr
