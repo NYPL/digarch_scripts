@@ -115,8 +115,12 @@ def metadata_folder_has_files(package: Path) -> bool:
     if md_files_ls:
         return True
     else:
-        LOGGER.error(f"{package.name} metadata folder does not have any files")
+        LOGGER.warning(f"{package.name} metadata folder does not have any files")
         return False
+
+def metadata_has_correct_naming_convention(package: Path) -> bool:
+    """The metadata file name should be “rclone.log"""
+    metadata_path = package / "metadata"
 
 def main():
     args = parse_args()
