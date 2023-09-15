@@ -81,4 +81,20 @@ def test_top_folder_invalid_name(good_package):
 
     assert not result
 
+def test_package_has_two_subfolders(good_package):
+    """Second level folders must be two"""
+    result = lint_ft.package_has_two_subfolders(good_package)
+
+    assert result
+
+def test_package_does_not_have_two_subfolders(good_package):
+    """Test that package fails function when second level folders are
+    not the correct number, i.e. 2"""
+    bad_package = good_package
+    new_folder = bad_package / "anotherfolder"
+    new_folder.mkdir()
+
+    result = lint_ft.package_has_two_subfolders(bad_package)
+
+    assert not result
 
