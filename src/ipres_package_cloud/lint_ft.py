@@ -98,6 +98,16 @@ def package_has_valid_subfolder_names(package: Path) -> bool:
         )
         return False
 
+def metadata_folder_is_flat(package: Path) -> bool:
+    """The metadata folder should not have folder structure"""
+    metadata_path = package / "metadata"
+    md_dir_ls = [x for x in metadata_path.iterdir() if x.is_dir()]
+    if md_dir_ls:
+        LOGGER.error(f"{package.name} has unexpected directory: {md_dir_ls}")
+        return False
+    else:
+        return True
+
 def main():
     args = parse_args()
     _configure_logging(args.log_folder)
