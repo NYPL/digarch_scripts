@@ -65,6 +65,17 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+def package_has_valid_name(package: Path) -> bool:
+    """Top level folder name has to conform to ACQ_####_######"""
+    folder_name = package.name
+    match = re.fullmatch(r"ACQ_[0-9]{4}_[0-9]{6}", folder_name)
+
+    if match:
+        return True
+    else:
+        LOGGER.error(f"{folder_name} does not conform to ACQ_####_######")
+        return False
+
 def main():
     args = parse_args()
     _configure_logging(args.log_folder)
