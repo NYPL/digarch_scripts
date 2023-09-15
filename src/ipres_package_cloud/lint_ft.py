@@ -76,6 +76,15 @@ def package_has_valid_name(package: Path) -> bool:
         LOGGER.error(f"{folder_name} does not conform to ACQ_####_######")
         return False
 
+def package_has_two_subfolders(package: Path) -> bool:
+    """There must be two subfolders in the package"""
+    pkg_folders = [ x for x in package.iterdir() if x.is_dir() ]
+    if len(pkg_folders) == 2:
+        return True
+    else:
+        LOGGER.error(f"{package} does not have exactly two subfolders")
+        return False
+
 def main():
     args = parse_args()
     _configure_logging(args.log_folder)
