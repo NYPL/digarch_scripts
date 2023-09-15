@@ -85,6 +85,19 @@ def package_has_two_subfolders(package: Path) -> bool:
         LOGGER.error(f"{package} does not have exactly two subfolders")
         return False
 
+def package_has_valid_subfolder_names(package: Path) -> bool:
+    """Second level folders must be objects and metadata folder"""
+    expected = set(["objects", "metadata"])
+    found = set([x.name for x in package.iterdir()])
+
+    if expected == found:
+        return True
+    else:
+        LOGGER.error(
+            f"{package.name} subfolders should have objects and metadata, found {found}"
+        )
+        return False
+
 def main():
     args = parse_args()
     _configure_logging(args.log_folder)
