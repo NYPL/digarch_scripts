@@ -134,3 +134,21 @@ def test_metadata_folder_has_random_folder(good_package):
 
     assert not result
 
+def test_metadata_folder_has_files(good_package):
+    """The metadata folder should have one or more file"""
+    result = lint_ft.metadata_folder_has_files(good_package)
+
+    assert result
+
+def test_metadata_folder_empty(good_package):
+    """Test that package fails function when the metadata does
+    not have any files"""
+    bad_package = good_package
+    md_file = bad_package / "metadata" / "rclone.log"
+    md_file.unlink()
+
+    result = lint_ft.metadata_folder_has_files(bad_package)
+
+    assert not result
+
+
