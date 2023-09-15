@@ -98,3 +98,21 @@ def test_package_does_not_have_two_subfolders(good_package):
 
     assert not result
 
+def test_sec_level_folder_valid_names(good_package):
+    """Second level folders must only have objects and metadata folder"""
+    result = lint_ft.package_has_valid_subfolder_names(good_package)
+
+    assert result
+
+
+def test_sec_level_folder_invalid_names(good_package):
+    """Test that package fails function when second level folders are not named
+    objects and metadata"""
+    bad_package = good_package
+    objects_path = bad_package / "objects"
+    objects_path.rename(bad_package / "obj")
+
+    result = lint_ft.package_has_valid_subfolder_names(bad_package)
+
+    assert not result
+
