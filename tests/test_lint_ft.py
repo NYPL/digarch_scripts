@@ -116,3 +116,21 @@ def test_sec_level_folder_invalid_names(good_package):
 
     assert not result
 
+def test_metadata_folder_is_flat(good_package):
+    """The metadata folder should not have folder structure"""
+    result = lint_ft.metadata_folder_is_flat(good_package)
+
+    assert result
+
+
+def test_metadata_folder_has_random_folder(good_package):
+    """Test that package fails function when the second-level metadata folder
+    has any folder in it"""
+    bad_package = good_package
+    random_dir = bad_package / "metadata" / "random_dir"
+    random_dir.mkdir()
+
+    result = lint_ft.metadata_folder_is_flat(bad_package)
+
+    assert not result
+
