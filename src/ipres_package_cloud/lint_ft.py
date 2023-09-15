@@ -66,6 +66,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def main():
+    args = parse_args()
     _configure_logging(args.log_folder)
 
     valid = []
