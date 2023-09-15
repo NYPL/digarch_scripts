@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-import ipres_package_cloud.lint_ft as lint_ft
+import src.ipres_package_cloud.lint_ft as lint_ft
 
 # Unit tests
 # Argument tests
@@ -64,5 +64,21 @@ def good_package(tmp_path: Path):
 
     return pkg
 
+def test_top_folder_valid_name(good_package):
+    """Top level folder name has to conform to ACQ_####_######"""
+    result = lint_ft.package_has_valid_name(good_package)
+
+    assert result
+
+
+def test_top_folder_invalid_name(good_package):
+    """Test that package fails function when the top level folder name
+    does not conform to the naming convention, ACQ_####_######"""
+    bad_package = good_package
+    bad_package = bad_package.rename(bad_package.parent / "ACQ_123_45")
+
+    result = lint_ft.package_has_valid_name(bad_package)
+
+    assert not result
 
 
