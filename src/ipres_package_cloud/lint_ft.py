@@ -108,6 +108,16 @@ def metadata_folder_is_flat(package: Path) -> bool:
     else:
         return True
 
+def metadata_folder_has_files(package: Path) -> bool:
+    """The metadata folder should have one or more file"""
+    metadata_path = package / "metadata"
+    md_files_ls = [ x for x in metadata_path.rglob("*") if x.is_file() ]
+    if md_files_ls:
+        return True
+    else:
+        LOGGER.error(f"{package.name} metadata folder does not have any files")
+        return False
+
 def main():
     args = parse_args()
     _configure_logging(args.log_folder)
