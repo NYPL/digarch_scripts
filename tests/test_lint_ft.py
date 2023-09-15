@@ -37,7 +37,8 @@ def good_package(tmp_path: Path):
     f_object_data = pkg / "objects" / "data"
     f_object_data.mkdir(parents=True)
 
-    bag_files = ["bag-info.txt", "bagit.txt", "manifest-md5.txt", "tagmanifest-md5.txt"]
+    bag_files = ["bag-info.txt", "bagit.txt",
+                 "manifest-md5.txt", "tagmanifest-md5.txt"]
     for f in bag_files:
         filepath = pkg / "objects" / f
         filepath.touch()
