@@ -98,6 +98,19 @@ def package_has_valid_subfolder_names(package: Path) -> bool:
         )
         return False
 
+def package_has_no_hidden_file(package: Path) -> bool:
+    """The package should not have any hidden file"""
+    hidden_ls = [
+        h
+        for h in package.rglob("*")
+        if h.name.startswith(".") or h.name.startswith("Thumbs")
+    ]
+    if hidden_ls:
+        LOGGER.warning(f"{package.name} has hidden files {hidden_ls}")
+        return False
+    else:
+        return True
+
 def metadata_folder_is_flat(package: Path) -> bool:
     """The metadata folder should not have folder structure"""
     metadata_path = package / "metadata"
