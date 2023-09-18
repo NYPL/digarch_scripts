@@ -187,3 +187,19 @@ def test_objects_folder_incorrect_structure(good_package):
 
     assert not result
 
+def test_objects_folder_has_no_empty_folder(good_package):
+    """The objects folder should not have any empty folders"""
+    result = lint_ft.objects_folder_has_no_empty_folder(good_package)
+
+    assert result
+
+def test_objects_folder_has_empty_folder(good_package):
+    """Test that package fails function if its objects folder has empty folder(s)"""
+    bad_package = good_package
+
+    file_in_folder = bad_package / "objects" / "data" / "folder1" / "fileinfolder.txt"
+    file_in_folder.unlink()
+
+    result = lint_ft.objects_folder_has_no_empty_folder(bad_package)
+
+    assert not result
