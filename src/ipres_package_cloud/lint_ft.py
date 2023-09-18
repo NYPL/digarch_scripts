@@ -119,8 +119,22 @@ def metadata_folder_has_files(package: Path) -> bool:
         return False
 
 def metadata_has_correct_naming_convention(package: Path) -> bool:
-    """The metadata file name should be “rclone.log"""
+    """The metadata file name should be in the accepted list"""
     metadata_path = package / "metadata"
+    accepted_fn = ["rclone.log"]
+
+    md_files_ls = [ x for x in metadata_path.rglob("*") if x.is_file() ]
+    nonconforming = []
+    for file in md_files_ls:
+        if not file.name in accepted_fn:
+            nonconforming.append(file)
+
+    if nonconforming:
+        LOGGER.error(f"""{package.name} has nonconforming metadata file(s):
+                     {nonconforming}""")
+        return False
+    else:
+        return True
 
 def main():
     args = parse_args()
