@@ -151,4 +151,21 @@ def test_metadata_folder_empty(good_package):
 
     assert not result
 
+def test_metadata_has_correct_naming_convention(good_package):
+    """The metadata file name should be in the accepted list"""
+    result = lint_ft.metadata_has_correct_naming_convention(good_package)
+
+    assert result
+
+def test_metadata_has_incorrect_naming_convention(good_package):
+    """Test that package fails function when metadata file(s) has
+    incorrect naming conventions"""
+    bad_package = good_package
+    incorrect_md_file = bad_package / "metadata" / "random_md.txt"
+    incorrect_md_file.touch()
+
+    result = lint_ft.metadata_has_correct_naming_convention(bad_package)
+
+    assert not result
+
 
