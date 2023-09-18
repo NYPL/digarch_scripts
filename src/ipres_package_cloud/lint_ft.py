@@ -162,7 +162,21 @@ def objects_folder_correct_structure(package: Path) -> bool:
     else:
         return True
 
+def objects_folder_has_no_empty_folder(package: Path) -> bool:
+    """The objects folder should not have any empty folders"""
+    objects_path = package / "objects"
+    folder_in_obj = [ x for x in objects_path.rglob("*") if x.is_dir() ]
+    empty = []
 
+    for folder in folder_in_obj:
+        if not any(folder.iterdir()):
+            empty.append(folder)
+
+    if empty:
+        LOGGER.error(f"{package.name} has empty folder: {empty}")
+        return False
+    else:
+        return True
 
 
 def main():
