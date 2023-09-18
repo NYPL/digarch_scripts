@@ -134,6 +134,22 @@ def test_package_has_hidden_file(good_package):
 
     assert not result
 
+def test_package_has_no_zero_bytes_file(good_package):
+    """The package should not have any zero bytes file"""
+    result = lint_ft.package_has_no_zero_bytes_file(good_package)
+
+    assert result
+
+def test_package_has_zero_bytes_file(good_package):
+    """Test that package fails function when there is any zero bytes file"""
+    bad_package = good_package
+    zero_bytes = bad_package / "objects" / "data" / "folder1" / "zerobytes.txt"
+    zero_bytes.touch()
+
+    result = lint_ft.package_has_no_zero_bytes_file(bad_package)
+
+    assert not result
+
 def test_metadata_folder_is_flat(good_package):
     """The metadata folder should not have folder structure"""
     result = lint_ft.metadata_folder_is_flat(good_package)
