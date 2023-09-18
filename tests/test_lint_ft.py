@@ -237,3 +237,30 @@ def test_objects_folder_has_empty_folder(good_package):
     result = lint_ft.objects_folder_has_no_empty_folder(bad_package)
 
     assert not result
+
+def test_valid_package(good_package):
+    """Test that package returns 'valid' when all tests are passed"""
+    result = lint_ft.lint_package(good_package)
+
+    assert result == "valid"
+
+def test_invalid_package(good_package):
+    """Test that package returns 'invalid' when failing some tests"""
+    bad_package = good_package
+
+    bag_folder = bad_package / "metadata" / "submissionDocumentation"
+    bag_folder.mkdir()
+
+    result = lint_ft.lint_package(bad_package)
+
+    assert result == "invalid"
+
+def test_unclear_package(good_package):
+    """Test that package returns 'needs review' when failing some tests"""
+    bad_package = good_package
+    md_fp = bad_package / "metadata" / "rclone.log"
+    md_fp.unlink()
+
+    result = lint_ft.lint_package(bad_package)
+
+    assert result == "needs review"
