@@ -7,6 +7,7 @@ import re
 import bagit
 
 LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
 
 
 def parse_args() -> argparse.Namespace:
@@ -118,10 +119,12 @@ def get_oxum(payload_dir: Path) -> (int, int):
 
 def validate_bag_in_payload(pkg_dir: Path) -> None:
     bag_dir = pkg_dir / "objects"
-    if bagit.Bag(bag_dir).validate(completeness_only=True):
-        LOGGER.info("Hooray")
-    else:
-        LOGGER.warn("Whoops")
+    bag = bagit.Bag(str(bag_dir))
+    try:
+        bag.validate(completeness_only=True)
+        LOGGER.info(f"{bag.path} is valid.")
+    except bagit.BagValidationError:
+        LOGGER.warn(f"{bag.path} is not valid. Check the bag manifest and oxum.")
     return None
 
 

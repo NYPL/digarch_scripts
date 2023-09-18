@@ -216,20 +216,33 @@ def test_create_bag(transfer_files: Path, package_base_dir: Path):
 
     assert bagit.Bag(bag_path).validate(completeness_only=True)
 
-
+    
 def test_validate_valid_bag(transfer_files: Path, caplog):
     """Test the log message"""
 
-    test_bag = bagit.make_bag(transfer_files)
+    object_dir = transfer_files / "objects"
+    object_dir.mkdir()
+    (transfer_files / "rclone.md5").rename(object_dir / "rlcone.md5")
 
-    assert f"{test_bag.path} is valid" in caplog.text
+    test_bag = bagit.make_bag(object_dir)
 
+    pc.validate_bag_in_payload(transfer_files)
+
+    assert f"{test_bag.path} is valid." in caplog.text
+    
 
 def test_validate_invalid_bag(transfer_files, caplog):
     """Test the log message if the bag isn't valid for some reason"""
 
-    test_bag = bagit.make_bag(transfer_files)
-    (Path(test_bag.path) / 'data' / 'rclone.log').unlink()
+    object_dir = transfer_files / "objects"
+    object_dir.mkdir()
+    (transfer_files / "rclone.md5").rename(object_dir / "rlcone.md5")
+
+    test_bag = bagit.make_bag(object_dir)
+    print(list(Path(test_bag.path).iterdir()))
+    (Path(test_bag.path) / 'bag-info.txt').unlink()
+    pc.validate_bag_in_payload(transfer_files)
+    
 
     assert f"{test_bag.path} is not valid. Check the bag manifest and oxum." in caplog.text
 
