@@ -168,4 +168,22 @@ def test_metadata_has_incorrect_naming_convention(good_package):
 
     assert not result
 
+def test_objects_folder_correct_structure(good_package):
+    """objects folder should have a data folder, which includes four files:
+    bag-info.txt, bagit.txt, manifest-md5.txt and tagmanifest-md5.txt"""
+    result = lint_ft.objects_folder_correct_structure(good_package)
+
+    assert result
+
+def test_objects_folder_incorrect_structure(good_package):
+    """Test that package fails function if it does not have the data folder,
+    or missing any of the four files: bag-info.txt, bagit.txt, manifest-md5.txt
+    and tagmanifest-md5.txt"""
+    bad_package = good_package
+    baginfo_fp = bad_package / "objects" / "bag-info.txt"
+    baginfo_fp.unlink()
+
+    result = lint_ft.objects_folder_correct_structure(bad_package)
+
+    assert not result
 
