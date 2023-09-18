@@ -136,6 +136,35 @@ def metadata_has_correct_naming_convention(package: Path) -> bool:
     else:
         return True
 
+def objects_folder_correct_structure(package: Path) -> bool:
+    """objects folder should have a data folder, which includes four files:
+    bag-info.txt, bagit.txt, manifest-md5.txt and tagmanifest-md5.txt"""
+    expected_paths = []
+    expected_files = ["bag-info.txt", "bagit.txt",
+                      "manifest-md5.txt", "tagmanifest-md5.txt"]
+    missing = []
+
+    data_folder = package / "objects" / "data"
+    expected_paths.append(data_folder)
+
+    for file in expected_files:
+        expected_fp = package / "objects" / file
+        expected_paths.append(expected_fp)
+
+    for fp in expected_paths:
+        if not fp.exists():
+            missing.append(fp.name)
+
+    if missing:
+        LOGGER.error(f"""{package.name} has incorrect structure.
+                     missing {missing}""")
+        return False
+    else:
+        return True
+
+
+
+
 def main():
     args = parse_args()
     _configure_logging(args.log_folder)
