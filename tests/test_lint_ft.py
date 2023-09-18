@@ -116,6 +116,24 @@ def test_sec_level_folder_invalid_names(good_package):
 
     assert not result
 
+def test_package_has_no_hidden_file(good_package):
+    """The package should not have any hidden file"""
+    result = lint_ft.package_has_no_hidden_file(good_package)
+
+    assert result
+
+def test_package_has_hidden_file(good_package):
+    """Test that package fails function when there is any hidden file"""
+    bad_package = good_package
+    folder = bad_package / "objects" / "data" / "folder2"
+    folder.mkdir(parents=True, exist_ok=True)
+    hidden_file = folder.joinpath(".DS_Store")
+    hidden_file.touch()
+
+    result = lint_ft.package_has_no_hidden_file(bad_package)
+
+    assert not result
+
 def test_metadata_folder_is_flat(good_package):
     """The metadata folder should not have folder structure"""
     result = lint_ft.metadata_folder_is_flat(good_package)
