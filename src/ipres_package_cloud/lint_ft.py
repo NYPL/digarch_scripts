@@ -202,6 +202,35 @@ def objects_folder_has_no_empty_folder(package: Path) -> bool:
     else:
         return True
 
+def lint_package(package: Path) -> Literal["valide", "invalide", "needs review"]:
+    """Run all linting tests against a package"""
+    result = "valid"
+
+    less_strict_tests = [
+        package_has_no_hidden_file,
+        package_has_no_zero_bytes_file,
+        metadata_folder_has_files
+    ]
+
+    for test in less_strict_tests:
+        if not test(package):
+            result = "needs review"
+
+    strict_tests = [
+        package_has_valid_name,
+        package_has_two_subfolders,
+        package_has_valid_subfolder_names,
+        metadata_folder_is_flat,
+        metadata_has_correct_naming_convention,
+        objects_folder_correct_structure,
+        objects_folder_has_no_empty_folder
+    ]
+
+    for test in strict_tests:
+        if not test(package):
+            result = "invalid"
+
+    return result
 
 def main():
     args = parse_args()
@@ -212,6 +241,32 @@ def main():
     needs_review = []
 
     counter = 0
+
+    for package in args.packages:
+        counter += 1
+        result = lint_package(package)
+        if result == "valid":
+            valid.append(package.name)
+        elif result == "invalid":
+            invalid.append(package.name)
+        else:
+            needs_review.append(package.name)
+    print(f"\nTotal packages ran: {counter}")
+    if valid:
+        print(
+            f"""
+        The following {len(valid)} packages are valid: {valid}"""
+        )
+    if invalid:
+        print(
+            f"""
+        The following {len(invalid)} packages are invalid: {invalid}"""
+        )
+    if needs_review:
+        print(
+            f"""
+        The following {len(needs_review)} packages need review.
+        They may be passed without change after review: {needs_review}""")
 
 if __name__ == "__main__":
     main()
