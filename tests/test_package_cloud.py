@@ -231,12 +231,14 @@ def test_create_bag(transfer_files: Path, package_base_dir: Path):
     """Test that all tag files are created and rclone md5sums are correctly converted"""
 
     md5_path = transfer_files / "rclone.md5"
-    bag_path = transfer_files / "objects"
+    bag_path = package_base_dir / "objects"
 
     # might need further testing of the oxum and manifest converter functions
-    pc.create_bag_in_objects(md5_path, package_base_dir)
+    pc.create_bag_in_objects(
+        transfer_files / "rclone_files", md5_path, package_base_dir
+    )
 
-    assert bagit.Bag(bag_path).validate(completeness_only=True)
+    assert bagit.Bag(str(bag_path)).validate(completeness_only=True)
 
 
 def test_generate_valid_oxum(transfer_files: Path):

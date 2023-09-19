@@ -36,7 +36,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def create_base_dir(dest: Path, id: str) -> Path:
-    print(id)
     acq_id = id.rsplit("_", 1)[0]
     package_base = dest / acq_id / id
     if package_base.exists():
@@ -64,10 +63,11 @@ def move_metadata_file(md_path: Path, pkg_dir: Path) -> None:
 
 def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> None:
     bag_dir = pkg_dir / "objects"
+    bag_dir.mkdir()
     move_payload(payload_path, bag_dir)
     convert_to_bagit_manifest(md5_path, bag_dir)
     # generate baginfo.txt and bagit.txt (copying code snippet from bagit)
-    create_bag_tag_files(pkg_dir)
+    create_bag_tag_files(bag_dir)
     return None
 
 def move_payload(payload_path: Path, bag_dir: Path) -> None:
@@ -108,19 +108,17 @@ def convert_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
 
     return None
 
-def create_bag_tag_files(pkg_dir):
-    LOGGER.info("Creating bagit.txt")
+def create_bag_tag_files(bag_dir: Path):
     txt = """BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8\n"""
-    with open("bagit.txt", "w") as bagit_file:
+    with open(bag_dir / "bagit.txt", "w") as bagit_file:
         bagit_file.write(txt)
 
-    LOGGER.info("Creating bag-info.txt")
     bag_info = {}
     bag_info["Bagging-Date"] = date.strftime(date.today(), "%Y-%m-%d")
     bag_info["Bag-Software-Agent"] = "package_cloud.py"
-    total_bytes, total_files = get_oxum(pkg_dir / "data")
+    total_bytes, total_files = get_oxum(bag_dir / "data")
     bag_info["Payload-Oxum"] = f"{total_bytes}.{total_files}"
-    bagit._make_tag_file("bag-info.txt", bag_info)
+    bagit._make_tag_file(bag_dir / "bag-info.txt", bag_info)
 
 
 def get_oxum(payload_dir: Path) -> (int, int):
