@@ -290,6 +290,6 @@ def test_full_run(
 
     pkg_dir = Path(args[-3]) / args[-1][:-7] / args[-1]
     assert pkg_dir.exists()
-    assert bagit.Bag(pkg_dir / 'objects').validate()
+    assert bagit.Bag(str(pkg_dir / 'objects')).validate()
 
     assert 'rclone.log' in [x.name for x in (pkg_dir / 'metadata').iterdir()]
