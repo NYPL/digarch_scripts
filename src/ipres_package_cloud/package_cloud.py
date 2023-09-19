@@ -70,19 +70,21 @@ def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> 
     create_bag_tag_files(pkg_dir)
     return None
 
-def move_payload(payload_path: Path, pkg_dir: Path) -> None:
+def move_payload(payload_path: Path, bag_dir: Path) -> None:
     #instantiate a var for objects dir
-    ob_dir = pkg_dir / "objects" / "data"
-    #if the object folder does not exist create it 
-    if not ob_dir.exists():
-        ob_dir.mkdir(parents=True)
-        
+    payload_dir = bag_dir / "data"
+    #if the object folder does not exist create it
+    if not payload_dir.exists():
+        payload_dir.mkdir(parents=True)
+    else:
+        raise FileExistsError(f"{payload_dir} already exists. Not moving files.")
+
     for a_file in payload_path.iterdir():
-        new_ob_path = ob_dir / a_file.name
+        new_ob_path = payload_dir / a_file.name
         #if a payload file is already in the object directory do not move, raise error
         if new_ob_path.exists():
              raise FileExistsError(f"{new_ob_path} already exists. Not moving.")
-        
+
         a_file.rename(new_ob_path)
     return None
 
@@ -91,9 +93,9 @@ def convert_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
     new_md5_path = bag_dir / "manifest-md5.txt"
     if new_md5_path.exists():
         raise FileExistsError("manifest-md5.txt already exists, review package")
-    
+
     with open(md5_path, "r") as f:
-        manifest_data = f.readlines()        
+        manifest_data = f.readlines()
 
     updated_manifest = [
         line.replace("  ", "  data/") for line in manifest_data
@@ -121,7 +123,7 @@ def create_bag_tag_files(pkg_dir):
     bagit._make_tag_file("bag-info.txt", bag_info)
 
 
-def get_oxum(payload_dir: Path) -> (int, int):    
+def get_oxum(payload_dir: Path) -> (int, int):
     total_bytes = 0
     total_files = 0
 
@@ -129,7 +131,7 @@ def get_oxum(payload_dir: Path) -> (int, int):
         if payload_file.is_file():
             total_files += 1
             total_bytes += os.stat(payload_file).st_size
-            
+
     return total_bytes, total_files
 
 

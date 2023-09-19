@@ -175,7 +175,7 @@ def test_move_payload(transfer_files: Path, package_base_dir: Path):
     ]
 
     data_path = package_base_dir / "objects" / "data"
-    pc.move_payload(source_payload, package_base_dir)
+    pc.move_payload(source_payload, package_base_dir / "objects")
 
     # check that source is empty
     assert not any(source_payload.iterdir())
@@ -197,7 +197,7 @@ def test_do_not_overwrite_payload(transfer_files: Path, package_base_dir: Path):
     bag_payload.mkdir(parents=True)
 
     with pytest.raises(FileExistsError) as exc:
-        pc.move_payload(source_payload, package_base_dir)
+        pc.move_payload(source_payload, package_base_dir / "objects")
 
     # check source has not changed
     assert source_contents == [file for file in source_payload.rglob("*")]
@@ -214,7 +214,7 @@ def test_convert_md5(bag_payload: Path, transfer_files: Path):
     rclone_md5 = transfer_files / "rclone.md5"
     pc.convert_to_bagit_manifest(rclone_md5, bag_payload.parent)
     bag_md5 = bag_payload.parent / "manifest-md5.txt"
-    
+
     # Get path to correct payload in data
     # read md5 and extract filepaths
     with open(bag_md5) as m:
@@ -247,7 +247,7 @@ def test_generate_valid_oxum(transfer_files: Path):
     assert total_bytes == 59347
     assert total_files == 12
 
-    
+
 def test_validate_valid_bag(transfer_files: Path, caplog):
     """Test the log message"""
 
@@ -260,7 +260,7 @@ def test_validate_valid_bag(transfer_files: Path, caplog):
     pc.validate_bag_in_payload(transfer_files)
 
     assert f"{test_bag.path} is valid." in caplog.text
-    
+
 
 def test_validate_invalid_bag(transfer_files, caplog):
     """Test the log message if the bag isn't valid for some reason"""
@@ -273,7 +273,7 @@ def test_validate_invalid_bag(transfer_files, caplog):
     print(list(Path(test_bag.path).iterdir()))
     (Path(test_bag.path) / 'bag-info.txt').unlink()
     pc.validate_bag_in_payload(transfer_files)
-    
+
 
     assert f"{test_bag.path} is not valid. Check the bag manifest and oxum." in caplog.text
 
