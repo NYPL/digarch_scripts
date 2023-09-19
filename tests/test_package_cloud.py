@@ -206,7 +206,7 @@ def test_do_not_overwrite_payload(transfer_files: Path, package_base_dir: Path):
 @pytest.fixture
 def bag_payload(transfer_files: Path, package_base_dir: Path):
     pc.move_payload(transfer_files / "rclone_files", package_base_dir)
-    bag_payload = package_base_dir / "objects" / "data"
+    bag_payload = package_base_dir / "data"
 
     return bag_payload
 
