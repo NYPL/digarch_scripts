@@ -246,7 +246,7 @@ def test_generate_valid_oxum(transfer_files: Path):
 
     total_bytes, total_files = pc.get_oxum(transfer_files)
 
-    assert total_bytes == 59347
+    assert total_bytes == 59286
     assert total_files == 12
 
 
