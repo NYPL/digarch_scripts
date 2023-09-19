@@ -166,9 +166,8 @@ def test_do_not_overwrite_metadata(transfer_files: Path, package_base_dir: Path)
     assert source_log.exists()
     assert f"{rclone_log} already exists. Not moving." in str(exc.value)
 
-
 def test_move_payload(transfer_files: Path, package_base_dir: Path):
-   """Test that entirety of payload is moved and hierarchy is preserved"""
+    """Test that entirety of payload is moved and hierarchy is preserved"""
 
     source_payload = transfer_files / "rclone_files"
     source_contents = [
@@ -227,7 +226,7 @@ def test_convert_md5(bag_payload: Path, transfer_files: Path):
     for a_file in md5_paths:
         assert a_file in payload_files
 
-        
+
 def test_create_bag(transfer_files: Path, package_base_dir: Path):
     """Test that all tag files are created and rclone md5sums are correctly converted"""
 
