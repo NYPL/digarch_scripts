@@ -1,6 +1,7 @@
 import argparse
 from datetime import date
 import logging
+import os
 from pathlib import Path
 import re
 
@@ -113,8 +114,16 @@ def create_bag_tag_files(pkg_dir):
     bagit._make_tag_file("bag-info.txt", bag_info)
 
 
-def get_oxum(payload_dir: Path) -> (int, int):
-    return
+def get_oxum(payload_dir: Path) -> (int, int):    
+    total_bytes = 0
+    total_files = 0
+
+    for payload_file in payload_dir.rglob('*'):
+        if payload_file.is_file():
+            total_files += 1
+            total_bytes += os.stat(payload_file).st_size
+            
+    return total_bytes, total_files
 
 
 def validate_bag_in_payload(pkg_dir: Path) -> None:

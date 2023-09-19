@@ -216,6 +216,15 @@ def test_create_bag(transfer_files: Path, package_base_dir: Path):
 
     assert bagit.Bag(bag_path).validate(completeness_only=True)
 
+
+def test_generate_valid_oxum(transfer_files: Path):
+    """Test that script generates oxum correctly"""
+
+    total_bytes, total_files = pc.get_oxum(transfer_files)
+
+    assert total_bytes == 59347
+    assert total_files == 12
+
     
 def test_validate_valid_bag(transfer_files: Path, caplog):
     """Test the log message"""
