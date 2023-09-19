@@ -168,14 +168,14 @@ def test_do_not_overwrite_metadata(transfer_files: Path, package_base_dir: Path)
 
 
 def test_move_payload(transfer_files: Path, package_base_dir: Path):
-    """Test that entirety of payload is moved and hierarchy is preserved"""
+   """Test that entirety of payload is moved and hierarchy is preserved"""
 
     source_payload = transfer_files / "rclone_files"
     source_contents = [
         file.relative_to(source_payload) for file in source_payload.rglob("*")
     ]
 
-    data_path = package_base_dir / "contents" / "data"
+    data_path = package_base_dir / "objects" / "data"
     pc.move_payload(source_payload, package_base_dir)
 
     # check that source is empty
@@ -204,7 +204,30 @@ def test_do_not_overwrite_payload(transfer_files: Path, package_base_dir: Path):
     assert source_contents == [file for file in source_payload.rglob("*")]
     assert f"{bag_payload} already exists. Not moving files." in str(exc.value)
 
+@pytest.fixture
+def bag_payload(transfer_files: Path, package_base_dir: Path):
+    pc.move_payload(transfer_files / "rclone_files", package_base_dir)
+    bag_payload = package_base_dir / "objects" / "data"
 
+    return bag_payload
+
+def test_convert_md5(bag_payload: Path, transfer_files: Path):
+    rclone_md5 = transfer_files / "rclone.md5"
+    pc.convert_to_bagit_manifest(rclone_md5, bag_payload.parent)
+    bag_md5 = bag_payload.parent / "manifest-md5.txt"
+    
+    # Get path to correct payload in data
+    # read md5 and extract filepaths
+    with open(bag_md5) as m:
+        md5_paths = [line.strip().split('  ')[-1] for line in m.readlines()]
+
+    payload_files = [
+        str(path.relative_to(bag_payload.parent)) for path in bag_payload.rglob('*')
+    ]
+    for a_file in md5_paths:
+        assert a_file in payload_files
+
+        
 def test_create_bag(transfer_files: Path, package_base_dir: Path):
     """Test that all tag files are created and rclone md5sums are correctly converted"""
 

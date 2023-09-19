@@ -35,7 +35,6 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-
 def create_base_dir(dest: Path, id: str) -> Path:
     print(id)
     acq_id = id.rsplit("_", 1)[0]
@@ -51,7 +50,6 @@ def create_base_dir(dest: Path, id: str) -> Path:
         raise PermissionError(f"{dest} is not writable")
     return package_base
 
-
 def move_metadata_file(md_path: Path, pkg_dir: Path) -> None:
     md_dir = pkg_dir / "metadata"
     if not md_dir.exists():
@@ -64,40 +62,49 @@ def move_metadata_file(md_path: Path, pkg_dir: Path) -> None:
     md_path.rename(new_md_path)
     return None
 
-
-def move_payload(payload_path: Path, pkg_dir: Path) -> None:
-    return None
-
-
-def create_bag_in_objects(md5_path: Path, pkg_dir: Path) -> None:
-    # this needs to do a lot
+def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> None:
     bag_dir = pkg_dir / "objects"
-    # move md5 file to manifest-md5.txt
-    new_md5_path = bag_dir / "manifest-md5.txt"
-    if new_md5_path.exists():
-        raise FileExistsError("some error message")
-    md5_path.rename(new_md5_path)
-    # update paths in md5 file, need to match old file path to path in data, and figure difference
-    relative_path = "?"
-    convert_to_bagit_manifest(new_md5_path, relative_path)
+    move_payload(payload_path, bag_dir)
+    convert_to_bagit_manifest(md5_path, bag_dir)
     # generate baginfo.txt and bagit.txt (copying code snippet from bagit)
     create_bag_tag_files(pkg_dir)
     return None
 
-
-def convert_to_bagit_manifest(md5_path: Path, replace: str) -> None:
-    with open(md5_path, "r") as f:
-        manifest_data = f.readlines()
-
-    # in test the replace string would be 'files'
-    updated_manifest = [
-        line.replace(f"  {replace}", "  data") for line in manifest_data
-    ]
-
-    with open(md5_path, "w"):
-        f.writelines(manifest_data)
+def move_payload(payload_path: Path, pkg_dir: Path) -> None:
+    #instantiate a var for objects dir
+    ob_dir = pkg_dir / "objects" / "data"
+    #if the object folder does not exist create it 
+    if not ob_dir.exists():
+        ob_dir.mkdir(parents=True)
+        
+    for a_file in payload_path.iterdir():
+        new_ob_path = ob_dir / a_file.name
+        #if a payload file is already in the object directory do not move, raise error
+        if new_ob_path.exists():
+             raise FileExistsError(f"{new_ob_path} already exists. Not moving.")
+        
+        a_file.rename(new_ob_path)
     return None
 
+def convert_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
+    #check for manifest
+    new_md5_path = bag_dir / "manifest-md5.txt"
+    if new_md5_path.exists():
+        raise FileExistsError("manifest-md5.txt already exists, review package")
+    
+    with open(md5_path, "r") as f:
+        manifest_data = f.readlines()        
+
+    updated_manifest = [
+        line.replace("  ", "  data/") for line in manifest_data
+    ]
+    #re-writes the manifest lines
+    with open(md5_path, "w") as f:
+        f.writelines(updated_manifest)
+    #move md5 file to manifest-md5.txt in bag
+    md5_path.rename(new_md5_path)
+
+    return None
 
 def create_bag_tag_files(pkg_dir):
     LOGGER.info("Creating bagit.txt")
@@ -142,10 +149,8 @@ def main():
 
     base_dir = create_base_dir(args.dest, args.id)
     move_metadata_file(args.log, base_dir)
-    move_payload(args.payload, base_dir)
-    create_bag_in_objects(args.md5, base_dir)
+    create_bag_in_objects(args.payload, args.md5, base_dir)
     validate_bag_in_payload(base_dir)
-
 
 if __name__ == "__main__":
     main()
