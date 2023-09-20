@@ -166,7 +166,6 @@ def test_do_not_overwrite_metadata(transfer_files: Path, package_base_dir: Path)
     assert source_log.exists()
     assert f"{rclone_log} already exists. Not moving." in str(exc.value)
 
-
 def test_move_payload(transfer_files: Path, package_base_dir: Path):
     """Test that entirety of payload is moved and hierarchy is preserved"""
 
@@ -175,8 +174,8 @@ def test_move_payload(transfer_files: Path, package_base_dir: Path):
         file.relative_to(source_payload) for file in source_payload.rglob("*")
     ]
 
-    data_path = package_base_dir / "contents" / "data"
-    pc.move_payload(source_payload, package_base_dir)
+    data_path = package_base_dir / "objects" / "data"
+    pc.move_payload(source_payload, package_base_dir / "objects")
 
     # check that source is empty
     assert not any(source_payload.iterdir())
@@ -198,38 +197,85 @@ def test_do_not_overwrite_payload(transfer_files: Path, package_base_dir: Path):
     bag_payload.mkdir(parents=True)
 
     with pytest.raises(FileExistsError) as exc:
-        pc.move_payload(source_payload, package_base_dir)
+        pc.move_payload(source_payload, package_base_dir / "objects")
 
     # check source has not changed
     assert source_contents == [file for file in source_payload.rglob("*")]
     assert f"{bag_payload} already exists. Not moving files." in str(exc.value)
+
+@pytest.fixture
+def bag_payload(transfer_files: Path, package_base_dir: Path):
+    pc.move_payload(transfer_files / "rclone_files", package_base_dir)
+    bag_payload = package_base_dir / "data"
+
+    return bag_payload
+
+def test_convert_md5(bag_payload: Path, transfer_files: Path):
+    rclone_md5 = transfer_files / "rclone.md5"
+    pc.convert_to_bagit_manifest(rclone_md5, bag_payload.parent)
+    bag_md5 = bag_payload.parent / "manifest-md5.txt"
+
+    # Get path to correct payload in data
+    # read md5 and extract filepaths
+    with open(bag_md5) as m:
+        md5_paths = [line.strip().split('  ')[-1] for line in m.readlines()]
+
+    payload_files = [
+        str(path.relative_to(bag_payload.parent)) for path in bag_payload.rglob('*')
+    ]
+    for a_file in md5_paths:
+        assert a_file in payload_files
 
 
 def test_create_bag(transfer_files: Path, package_base_dir: Path):
     """Test that all tag files are created and rclone md5sums are correctly converted"""
 
     md5_path = transfer_files / "rclone.md5"
-    bag_path = transfer_files / "objects"
+    bag_path = package_base_dir / "objects"
 
     # might need further testing of the oxum and manifest converter functions
-    pc.create_bag_in_objects(md5_path, package_base_dir)
+    pc.create_bag_in_objects(
+        transfer_files / "rclone_files", md5_path, package_base_dir
+    )
 
-    assert bagit.Bag(bag_path).validate(completeness_only=True)
+    assert bagit.Bag(str(bag_path)).validate(completeness_only=True)
+
+
+def test_generate_valid_oxum(transfer_files: Path):
+    """Test that script generates oxum correctly"""
+
+    total_bytes, total_files = pc.get_oxum(transfer_files)
+
+    assert total_bytes == 59286
+    assert total_files == 12
 
 
 def test_validate_valid_bag(transfer_files: Path, caplog):
     """Test the log message"""
 
-    test_bag = bagit.make_bag(transfer_files)
+    object_dir = transfer_files / "objects"
+    object_dir.mkdir()
+    (transfer_files / "rclone.md5").rename(object_dir / "rlcone.md5")
 
-    assert f"{test_bag.path} is valid" in caplog.text
+    test_bag = bagit.make_bag(object_dir)
+
+    pc.validate_bag_in_payload(transfer_files)
+
+    assert f"{test_bag.path} is valid." in caplog.text
 
 
 def test_validate_invalid_bag(transfer_files, caplog):
     """Test the log message if the bag isn't valid for some reason"""
 
-    test_bag = bagit.make_bag(transfer_files)
-    (Path(test_bag.path) / 'data' / 'rclone.log').unlink()
+    object_dir = transfer_files / "objects"
+    object_dir.mkdir()
+    (transfer_files / "rclone.md5").rename(object_dir / "rlcone.md5")
+
+    test_bag = bagit.make_bag(object_dir)
+    print(list(Path(test_bag.path).iterdir()))
+    (Path(test_bag.path) / 'bag-info.txt').unlink()
+    pc.validate_bag_in_payload(transfer_files)
+
 
     assert f"{test_bag.path} is not valid. Check the bag manifest and oxum." in caplog.text
 
@@ -244,6 +290,6 @@ def test_full_run(
 
     pkg_dir = Path(args[-3]) / args[-1][:-7] / args[-1]
     assert pkg_dir.exists()
-    assert bagit.Bag(pkg_dir / 'objects').validate()
+    assert bagit.Bag(str(pkg_dir / 'objects')).validate()
 
     assert 'rclone.log' in [x.name for x in (pkg_dir / 'metadata').iterdir()]
