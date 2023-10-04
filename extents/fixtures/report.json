@@ -1,0 +1,154 @@
+{
+    "title": "coll",
+    "children": [
+        {
+            "title": "Extents Test papers",
+            "children": [
+                {
+                    "title": "ER 10: File 21,2023",
+                    "er_number": "ER 10",
+                    "er_name": "File 21,2023",
+                    "file_size": 16,
+                    "file_number": 1
+                },
+                {
+                    "title": "Series 1",
+                    "children": [
+                        {
+                            "title": "Subseries(1)",
+                            "children": [
+                                {
+                                    "title": "ER 1: Text, 2023",
+                                    "er_number": "ER 1",
+                                    "er_name": "Text, 2023",
+                                    "file_size": 110,
+                                    "file_number": 7
+                                },
+                                {
+                                    "title": "Subsubseries(2)",
+                                    "children": [
+                                        {
+                                            "title": "ER 2: File 15, 2023",
+                                            "er_number": "ER 2",
+                                            "er_name": "File 15, 2023",
+                                            "file_size": 16,
+                                            "file_number": 1
+                                        },
+                                        {
+                                            "title": "Subsubsubseries(3)",
+                                            "children": [
+                                                {
+                                                    "title": "Subsubsubsubseries(4)",
+                                                    "children": [
+                                                        {
+                                                            "title": "ER 10: Folder 2, 2023",
+                                                            "er_number": "ER 10",
+                                                            "er_name": "Folder 2, 2023",
+                                                            "file_size": 80,
+                                                            "file_number": 5
+                                                        },
+                                                        {
+                                                            "title": "ER 3: Folder 1, 2023",
+                                                            "er_number": "ER 3",
+                                                            "er_name": "Folder 1, 2023",
+                                                            "file_size": 60,
+                                                            "file_number": 5
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "title": "Subsubsubseries(3) the second",
+                                            "children": [
+                                                {
+                                                    "title": "ER 11: File 16, 2023",
+                                                    "er_number": "ER 11",
+                                                    "er_name": "File 16, 2023",
+                                                    "file_size": 16,
+                                                    "file_number": 1
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "title": "Subsubseries(2) the second",
+                                    "children": [
+                                        {
+                                            "title": "ER 23: File 17, 2023",
+                                            "er_number": "ER 23",
+                                            "er_name": "File 17, 2023",
+                                            "file_size": 16,
+                                            "file_number": 1
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Subseries(1) the second",
+                            "children": [
+                                {
+                                    "title": "ER 4: File 18, 2023",
+                                    "er_number": "ER 4",
+                                    "er_name": "File 18, 2023",
+                                    "file_size": 16,
+                                    "file_number": 1
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "title": "Series 2",
+                    "children": [
+                        {
+                            "title": "ER 9: File 20,2023",
+                            "er_number": "ER 9",
+                            "er_name": "File 20,2023",
+                            "file_size": 16,
+                            "file_number": 1
+                        },
+                        {
+                            "title": "Subseries(1) of Series 2",
+                            "children": [
+                                {
+                                    "title": "ER 8: File 2, 2023",
+                                    "er_number": "ER 8",
+                                    "er_name": "File 2, 2023",
+                                    "file_size": 15,
+                                    "file_number": 1
+                                },
+                                {
+                                    "title": "Subsubseries(2) of Series 2",
+                                    "children": [
+                                        {
+                                            "title": "ER 7: File 19, 2023",
+                                            "er_number": "ER 7",
+                                            "er_name": "File 19, 2023",
+                                            "file_size": 16,
+                                            "file_number": 1
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "title": "Series 3",
+                    "children": [
+                        {
+                            "title": "ER 12: File 0 (also in ER 1), 2023",
+                            "er_number": "ER 12",
+                            "er_name": "File 0 (also in ER 1), 2023",
+                            "file_size": 15,
+                            "file_number": 1
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
