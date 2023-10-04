@@ -5,10 +5,9 @@ import re
 import pathlib
 import json
 
-
-@pytest.fixture(scope='session')
-def arranged_collection(tmp_path_factory):
-    path = tmp_path_factory.getbasetemp().joinpath('hdd')
+@pytest.fixture()
+def arranged_collection(tmp_path: pathlib.Path):
+    path = tmp_path.joinpath('hdd')
     shutil.copytree('fixtures/', path)
     return path
 
@@ -17,7 +16,7 @@ def test_identify_all_ers(arranged_collection):
     ers = rhe.get_ers(arranged_collection)
     print(ers)
     just_ers = [re.search(r'ER\s\d+', er[0]).group() for er in ers]
-  
+
     for i in range(1, 4):
         assert f'ER {i}' in just_ers
     for i in range(7, 12):
@@ -57,7 +56,7 @@ def test_correct_report_many_files(arranged_collection):
         if er[3] == er_with_many_files:
             bytes, files = er[1:3]
             break
-    
+
     # bytes
     assert bytes == 110
     # files
@@ -103,6 +102,7 @@ def test_warn_on_no_files_in_er(arranged_collection, caplog):
     log_msg = f'{er_with_no_files} does not contain any files. It will be omitted from the report.'
     assert log_msg in caplog.text
 
+
 def test_warn_on_a_no_byte_file_in_er(arranged_collection, caplog):
     """Test if warning is logged for empty files in an ER"""
     ers = rhe.get_ers(arranged_collection)
@@ -113,6 +113,7 @@ def test_warn_on_a_no_byte_file_in_er(arranged_collection, caplog):
     # 'ER xxx: Title contain zero byte files.'
     log_msg = f'{er_with_no_bytes} contains the following 0-byte file: file00.txt. Review this file with the processing archivist.'
     assert log_msg in caplog.text
+
 
 def test_warn_on_no_bytes_in_er(arranged_collection, caplog):
     """Test if warning is logged for bookmarks with 0 bytes total and ER is omitted from report"""
@@ -125,12 +126,23 @@ def test_warn_on_no_bytes_in_er(arranged_collection, caplog):
     log_msg = f'{er_with_no_bytes} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.'
     assert log_msg in caplog.text
 
+
+def test_warn_on_no_objects_in_er(arranged_collection, caplog):
+    """Test if warning is logged for empty bookmarks and ER is omitted from report"""
+    ers = rhe.get_ers(arranged_collection)
+
+    er_with_no_files = 'ER 13 No objects, 2023'
+
+    log_msg = f'{er_with_no_files} does not contain an object folder. It will be omitted from the report.'
+    assert log_msg in caplog.text
+
+
 def test_extract_collection_name(arranged_collection):
     """Test if collection name is taken from XML"""
     coll_name = rhe.extract_collection_title(arranged_collection)
 
     assert coll_name == 'M12345_FAcomponents'
- 
+
 def test_warn_on_bad_collection_name(arranged_collection, caplog):
     """Test if collection name is taken from XML"""
     coll_name_folder = arranged_collection / 'M12345_FAcomponents'
@@ -156,28 +168,53 @@ def test_repeated_ER_number_behavior(arranged_collection, caplog):
     log_msg = 'ER 10 is used multiple times'
 
     assert log_msg in caplog.text
-'''
+
 @pytest.fixture
 def extracted_ers(arranged_collection):
     return rhe.get_ers(arranged_collection)
 
 def test_json_objects_contains_expected_fields(extracted_ers):
     """Test if final report aligns with expectations for ASpace import"""
-    rhe.create_report(extracted_ers)
 
-    assert False
+    full_dict = rhe.create_report(extracted_ers, {'title': 'test', 'children': []})
+
+    def recursive_validator(er_dict):
+        for key, value in er_dict.items():
+            if key == 'title':
+                assert type(value) is str
+            elif key == 'children':
+                assert type(value) is list
+                for child in value:
+                    recursive_validator(child)
+            elif key == 'er_number':
+                assert type(value) is str
+            elif key == 'er_name':
+                assert type(value) is str
+            elif key == 'file_size':
+                assert type(value) is int
+            elif key == 'file_number':
+                assert type(value) is int
+            else:
+                assert False
+
+    recursive_validator(full_dict)
 
 
 @pytest.fixture
 def expected_json():
     with open('fixtures/report.json') as f:
-        report = json.load(f)
+        raw = f.read()
+
+    #adjust fixture for hdd conventions
+    colons_removed = re.sub(r"(ER \d+):", r"\1", raw)
+    report = json.loads(colons_removed)
+    report['children'][0]['title'] = 'M12345_FAcomponents'
+
+
     return report
 
 def test_create_correct_json(extracted_ers, expected_json):
     """Test that final report matches total expectations"""
-    dct = {'title': 'coll', 'children': []}
-    dct = rhe.create_report(extracted_ers, dct)
+    dct = rhe.create_report(extracted_ers, {'title': 'coll', 'children': []})
 
     assert dct == expected_json
-'''

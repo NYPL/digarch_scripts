@@ -21,7 +21,7 @@ def parse_args():
             raise argparse.ArgumentTypeError(
                 f'Specified path is not a directory: {d}'
             )
-            
+
         return path
 
     def validate_output_dir(f) -> pathlib.Path:
@@ -58,19 +58,23 @@ def get_ers(
     ers = []
     for possible_er in facomponent_dir.glob('**/ER *'):
         objects_dir = possible_er.joinpath('objects')
-        if possible_er.is_dir() and objects_dir.is_dir():
-            #
-            er = possible_er.relative_to(facomponent_dir)
-            size = 0
-            count = 0
-            for path, dirs, files in os.walk(objects_dir):
-                for f in files:
-                    count += 1
-                    fp = os.path.join(path, f)
-                    if os.path.getsize(fp) == 0:
-                        LOGGER.warning(
-                           f'{possible_er.name} contains the following 0-byte file: {f}. Review this file with the processing archivist.')
-                    size += os.path.getsize(fp)
+        if possible_er.is_dir():
+            if objects_dir.is_dir():
+                er = possible_er.relative_to(facomponent_dir)
+                size = 0
+                count = 0
+                for path, dirs, files in os.walk(objects_dir):
+                    for f in files:
+                        count += 1
+                        fp = os.path.join(path, f)
+                        if os.path.getsize(fp) == 0:
+                            LOGGER.warning(
+                            f'{possible_er.name} contains the following 0-byte file: {f}. Review this file with the processing archivist.')
+                        size += os.path.getsize(fp)
+            else:
+                LOGGER.warning(
+                    f'{possible_er.name} does not contain an object folder. It will be omitted from the report.')
+                continue
         if count == 0:
             LOGGER.warning(
                 f'{possible_er.name} does not contain any files. It will be omitted from the report.')
@@ -79,7 +83,7 @@ def get_ers(
             LOGGER.warning(
                 f'{possible_er.name} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.')
             continue
-         
+
         ers.append([str(er), size, count, possible_er.name])
     return ers
 
@@ -121,7 +125,6 @@ def audit_ers(ers: list[list[str, str, str]]) -> None:
     return None
 
 
-
 def create_report(
     input: list[list[str, int, int]],
     report: dict
@@ -137,11 +140,11 @@ def process_item(
     report: dict
 ) -> dict:
     if not '/' in input[0]:
-        number, name = input[0].split('.', maxsplit=1)
+        parts = re.match(r'(ER \d+)\s(.*)', input[0])
         report['children'].append({
             'title': input[0],
-            'er_number': number,
-            'er_name': name,
+            'er_number': parts.group(1),
+            'er_name': parts.group(2),
             'file_size': input[1],
             'file_number': input[2]
         })
