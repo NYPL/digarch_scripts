@@ -11,6 +11,9 @@ python = "^3.11"
 pytest = "^7.4.2"
 lxml = "^4.9.3"
 
+[tool.poetry.scripts]
+report_ftk_extents = 'digarch_scripts.report_ftk_extents:main'
+report_hdd_extents = 'digarch_scripts.report_hdd_extents:main'
 
 [build-system]
 requires = ["poetry-core"]
