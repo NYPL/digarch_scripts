@@ -1,4 +1,4 @@
-import report_ftk_extents as rfe
+import digarch_scripts.report_ftk_extents as rfe
 import pytest
 import json
 try:
@@ -9,7 +9,7 @@ except ImportError:
 
 @pytest.fixture
 def parsed_report():
-    return etree.parse('fixtures/Report.xml')
+    return etree.parse('tests/fixtures/Report.xml')
 
 def test_identify_all_ers(parsed_report):
     """Function should list every bookmark starting with ER"""
@@ -206,7 +206,7 @@ def test_repeated_ER_number_behavior(parsed_report, caplog):
 
 @pytest.fixture
 def expected_json():
-    with open('fixtures/report.json') as f:
+    with open('tests/fixtures/report.json') as f:
         report = json.load(f)
     return report
 
