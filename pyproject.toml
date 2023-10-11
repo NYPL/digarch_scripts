@@ -8,12 +8,15 @@ packages = [{include = "digarch_scripts", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-pytest = "^7.4.2"
 lxml = "^4.9.3"
 
 [tool.poetry.scripts]
 report_ftk_extents = 'digarch_scripts.report_ftk_extents:main'
 report_hdd_extents = 'digarch_scripts.report_hdd_extents:main'
+
+[tool.poetry.group.dev.dependencies]
+nox = "^2023.4.22"
+pytest = "^7.4.2"
 
 [build-system]
 requires = ["poetry-core"]
