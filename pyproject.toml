@@ -17,6 +17,7 @@ report_hdd_extents = 'digarch_scripts.report_hdd_extents:main'
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
 pytest = "^7.4.2"
+flake8 = "^6.1.0"
 
 [build-system]
 requires = ["poetry-core"]
