@@ -1,4 +1,4 @@
-import ipres_package_cloud.package_cloud as pc
+import digarch_scripts.package.package_cloud as pc
 
 import argparse
 import os
@@ -11,7 +11,7 @@ import bagit
 
 @pytest.fixture
 def transfer_files(tmp_path: Path, request):
-    fixture_data = Path(request.module.__file__).parent / "fixtures"
+    fixture_data = Path(request.module.__file__).parent / "fixtures" / "cloud"
     shutil.copytree(fixture_data, tmp_path, dirs_exist_ok=True)
     return tmp_path
 

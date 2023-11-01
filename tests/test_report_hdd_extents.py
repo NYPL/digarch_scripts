@@ -1,4 +1,4 @@
-import digarch_scripts.report_hdd_extents as rhe
+import digarch_scripts.report.report_hdd_extents as rhe
 import pytest
 import shutil
 import re
@@ -8,7 +8,7 @@ import json
 @pytest.fixture()
 def arranged_collection(tmp_path: pathlib.Path):
     path = tmp_path.joinpath('hdd')
-    shutil.copytree('tests/fixtures/', path)
+    shutil.copytree('tests/fixtures/report', path)
     return path
 
 def test_identify_all_ers(arranged_collection):
@@ -202,7 +202,7 @@ def test_json_objects_contains_expected_fields(extracted_ers):
 
 @pytest.fixture
 def expected_json():
-    with open('tests/fixtures/report.json') as f:
+    with open('tests/fixtures/report/report.json') as f:
         raw = f.read()
 
     #adjust fixture for hdd conventions

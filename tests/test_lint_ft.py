@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-import src.ipres_package_cloud.lint_ft as lint_ft
+import digarch_scripts.lint.lint_ft as lint_ft
 
 # Unit tests
 # Argument tests
