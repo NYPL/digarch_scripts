@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "digarch_scripts", from = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.9"
 lxml = "^4.9.3"
 
 [tool.poetry.scripts]
