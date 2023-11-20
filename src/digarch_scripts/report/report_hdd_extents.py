@@ -37,8 +37,8 @@ def parse_args():
 
     parser.add_argument(
         "-d", "--dir",
-        type = validate_dir,
-        help = "Path to the parent directory, e.g. M###_FAComponents",
+        type=validate_dir,
+        help="Path to the parent directory, e.g. M###_FAComponents",
         required = True
     )
 
@@ -93,7 +93,7 @@ def extract_collection_title(hdd_dir: pathlib.Path) -> str:
             return item.name
         else:
             LOGGER.warning(
-                f'Cannot find CollectionID_FAcomponents directory. Please use CollectionID_FAcomponents naming convention for the directory containing all ERs.'
+                'Cannot find CollectionID_FAcomponents directory. Please use CollectionID_FAcomponents naming convention for the directory containing all ERs.'
             )
 
 def audit_ers(ers: list[list[str, str, str]]) -> None:

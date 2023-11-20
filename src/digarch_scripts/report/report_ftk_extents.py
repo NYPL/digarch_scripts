@@ -1,7 +1,6 @@
 from lxml import etree
 import json
 import re
-import time
 import argparse
 import os
 import pathlib
@@ -11,6 +10,7 @@ LOGGER = logging.getLogger(__name__)
 
 # Namespace for the FTK output XML
 FO_NAMESPACE = {'fo': 'http://www.w3.org/1999/XSL/Format'}
+
 
 def _make_parser():
 
@@ -43,7 +43,6 @@ def _make_parser():
             )
 
         return path
-
 
     parser = argparse.ArgumentParser(
         description='Create a JSON report from XML'
@@ -122,7 +121,7 @@ def audit_ers(ers: list[list[str, str, str]]) -> None:
     for er in ers:
         number = re.match(r'ER (\d+):', er[2])
         er_number = int(number[1])
-        if not er_number in er_numbers_used.keys():
+        if er_number not in er_numbers_used.keys():
             er_numbers_used[er_number] = [er[2]]
         else:
             er_numbers_used[er_number].append(er[2])
@@ -159,14 +158,13 @@ def transform_bookmark_tables(
     '''
 
     extent_tree = tree.xpath(
-        '/fo:root/fo:page-sequence[@master-reference="bookmarksPage"]/fo:flow/fo:table[@id]'\
-        ,
+        '/fo:root/fo:page-sequence[@master-reference="bookmarksPage"]/fo:flow/fo:table[@id]',
         namespaces=FO_NAMESPACE
     )
 
     bookmark_contents = []
     for row in extent_tree:
-        #row is an /fo:row in /fo:table[@id]
+        # row is an /fo:row in /fo:table[@id]
         file_table = row.xpath(
             './fo:table-body/fo:table-row/fo:table-cell/fo:block',
             namespaces=FO_NAMESPACE
