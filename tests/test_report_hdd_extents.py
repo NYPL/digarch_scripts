@@ -192,7 +192,7 @@ def test_json_objects_contains_expected_fields(extracted_ers):
                 assert type(value) is str
             elif key == 'file_size':
                 assert type(value) is int
-            elif key == 'file_number':
+            elif key == 'file_count':
                 assert type(value) is int
             else:
                 assert False
