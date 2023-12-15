@@ -267,7 +267,7 @@ def create_report(
             'er_number': number,
             'er_name': name.strip(),
             'file_size': input[1],
-            'file_number': input[2]
+            'file_count': input[2]
         })
     else:
         parent, child = input[0].split('/', maxsplit=1)

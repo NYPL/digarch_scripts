@@ -146,7 +146,7 @@ def process_item(
             'er_number': parts.group(1),
             'er_name': parts.group(2),
             'file_size': input[1],
-            'file_number': input[2]
+            'file_count': input[2]
         })
     else:
         parent, child = input[0].split('/', maxsplit=1)
