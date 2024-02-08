@@ -7,6 +7,24 @@ except ImportError:
     import xml.etree.ElementTree as etree
 
 
+def test_parse_xml():
+    """Function should return etree object"""
+    tree = rfe.parse_xml('tests/fixtures/report/Report.xml')
+
+    assert type(tree) is etree._ElementTree
+
+def test_quit_on_invalid_xml(capsys):
+    """Entire script should quit if XML can't be parse"""
+
+    # TODO manipulate xml to be unparseable
+
+    with pytest.raises(SystemExit):
+        rfe.parse_xml('tests/fixtures/report/Report.xml')
+
+    msg = "FTK report cannot be parsed. Edit the unreadable characters in the report with a text editor."
+    out, err = capsys.readouterr()
+    assert msg in err
+
 @pytest.fixture
 def parsed_report():
     return etree.parse('tests/fixtures/report/Report.xml')

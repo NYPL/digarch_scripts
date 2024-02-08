@@ -65,6 +65,15 @@ def _make_parser():
     return parser.parse_args()
 
 
+def parse_xml(path: pathlib.Path):
+    try:
+        tree = etree.parse(path)
+    except etree.XMLSyntaxError as e:
+        raise SystemExit(f"FTK report cannot be parsed. Edit the unreadable characters in the report with a text editor. {e.msg}")
+
+    return tree
+
+
 def create_er_list(
     tree: etree.ElementTree
 ) -> list[list[str, str]]:
@@ -322,7 +331,7 @@ def main() -> None:
     args = _make_parser()
 
     print('Parsing XML ...')
-    tree = etree.parse(args.file)
+    tree = parse_xml(args.file)
 
     print('Creating report ...')
     ers = create_er_list(tree)
