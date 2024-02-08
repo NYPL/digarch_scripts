@@ -120,7 +120,15 @@ def audit_ers(ers: list[list[str, str, str]]) -> None:
     er_numbers_used = {}
     for er in ers:
         number = re.match(r'ER (\d+):', er[2])
-        er_number = int(number[1])
+
+        if not number:
+            LOGGER.warning(
+                f'ER is missing a number: {er[2]}. Review the ERs with the processing archivist'
+            )
+            er_number = 0
+        else:
+            er_number = int(number[1])
+
         if er_number not in er_numbers_used.keys():
             er_numbers_used[er_number] = [er[2]]
         else:
