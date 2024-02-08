@@ -195,6 +195,18 @@ def test_skipped_ER_number_behavior(parsed_report, caplog):
     for i in range(13, 23):
         assert f'Collection uses ER 1 to ER 23. ER {i} is skipped. Review the ERs with the processing archivist' in caplog.text
 
+
+def test_ER_missing_number_behavior(parsed_report, caplog):
+    """Test if script flags when ER number is reused"""
+    ers = rfe.create_er_list(parsed_report)
+    ers[0][2] = "ER ?: File 21,2023"
+
+    rfe.audit_ers(ers)
+
+    log_msg = f'ER is missing a number: ER ?: File 21,2023. Review the ERs with the processing archivist'
+    assert log_msg in caplog.text
+
+
 def test_repeated_ER_number_behavior(parsed_report, caplog):
     """Test if script flags when ER number is reused"""
     ers = rfe.create_er_list(parsed_report)
