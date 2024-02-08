@@ -151,6 +151,16 @@ def test_warn_on_bad_collection_name(arranged_collection, caplog):
     log_msg = 'Cannot find CollectionID_FAcomponents directory. Please use CollectionID_FAcomponents naming convention for the directory containing all ERs.'
     assert log_msg in caplog.text
 
+def test_ER_missing_number_behavior(arranged_collection, caplog):
+    """Test if script flags when ER number is reused"""
+    ers = rhe.get_ers(arranged_collection)
+    ers[0][3] = "ER ? File 21,2023"
+
+    rhe.audit_ers(ers)
+
+    log_msg = f'ER is missing a number: ER ? File 21,2023. Review the ERs with the processing archivist'
+    assert log_msg in caplog.text
+
 def test_skipped_ER_number_behavior(arranged_collection, caplog):
     ers = rhe.get_ers(arranged_collection)
     rhe.audit_ers(ers)
