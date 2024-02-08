@@ -13,21 +13,20 @@ def test_parse_xml():
 
     assert type(tree) is etree._ElementTree
 
-def test_quit_on_invalid_xml(capsys):
+def test_quit_on_invalid_xml(tmp_path):
     """Entire script should quit if XML can't be parse"""
-
-    # TODO manipulate xml to be unparseable
-
-    with pytest.raises(SystemExit):
-        rfe.parse_xml('tests/fixtures/report/Report.xml')
+    bad_xml = tmp_path / "bad.xml"
+    # <a>\x07</a> write xml with ASCII control character
+    with open(bad_xml, 'wb') as f:
+        f.write(b"\x3c\x61\x3e\x07\x3c\x2f\x61\x3e")
 
     msg = "FTK report cannot be parsed. Edit the unreadable characters in the report with a text editor."
-    out, err = capsys.readouterr()
-    assert msg in err
+    with pytest.raises(SystemExit, match=msg):
+        rfe.parse_xml(bad_xml)
 
 @pytest.fixture
 def parsed_report():
-    return etree.parse('tests/fixtures/report/Report.xml')
+    return rfe.parse_xml('tests/fixtures/report/Report.xml')
 
 def test_identify_all_ers(parsed_report):
     """Function should list every bookmark starting with ER"""
