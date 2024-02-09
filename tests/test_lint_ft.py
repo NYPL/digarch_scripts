@@ -4,6 +4,7 @@ import pytest
 
 import digarch_scripts.lint.lint_ft as lint_ft
 
+
 # Unit tests
 # Argument tests
 def test_package_argument(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -30,6 +31,7 @@ def test_directory_argument(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 
     assert child_dir in args.packages
 
+
 # linting tests
 @pytest.fixture
 def good_package(tmp_path: Path):
@@ -37,8 +39,7 @@ def good_package(tmp_path: Path):
     f_object_data = pkg / "objects" / "data"
     f_object_data.mkdir(parents=True)
 
-    bag_files = ["bag-info.txt", "bagit.txt",
-                 "manifest-md5.txt", "tagmanifest-md5.txt"]
+    bag_files = ["bag-info.txt", "bagit.txt", "manifest-md5.txt", "tagmanifest-md5.txt"]
     for f in bag_files:
         filepath = pkg / "objects" / f
         filepath.touch()
@@ -64,6 +65,7 @@ def good_package(tmp_path: Path):
 
     return pkg
 
+
 def test_top_folder_valid_name(good_package):
     """Top level folder name has to conform to ACQ_####_######"""
     result = lint_ft.package_has_valid_name(good_package)
@@ -81,11 +83,13 @@ def test_top_folder_invalid_name(good_package):
 
     assert not result
 
+
 def test_package_has_two_subfolders(good_package):
     """Second level folders must be two"""
     result = lint_ft.package_has_two_subfolders(good_package)
 
     assert result
+
 
 def test_package_does_not_have_two_subfolders(good_package):
     """Test that package fails function when second level folders are
@@ -97,6 +101,7 @@ def test_package_does_not_have_two_subfolders(good_package):
     result = lint_ft.package_has_two_subfolders(bad_package)
 
     assert not result
+
 
 def test_sec_level_folder_valid_names(good_package):
     """Second level folders must only have objects and metadata folder"""
@@ -116,11 +121,13 @@ def test_sec_level_folder_invalid_names(good_package):
 
     assert not result
 
+
 def test_package_has_no_hidden_file(good_package):
     """The package should not have any hidden file"""
     result = lint_ft.package_has_no_hidden_file(good_package)
 
     assert result
+
 
 def test_package_has_hidden_file(good_package):
     """Test that package fails function when there is any hidden file"""
@@ -134,11 +141,13 @@ def test_package_has_hidden_file(good_package):
 
     assert not result
 
+
 def test_package_has_no_zero_bytes_file(good_package):
     """The package should not have any zero bytes file"""
     result = lint_ft.package_has_no_zero_bytes_file(good_package)
 
     assert result
+
 
 def test_package_has_zero_bytes_file(good_package):
     """Test that package fails function when there is any zero bytes file"""
@@ -149,6 +158,7 @@ def test_package_has_zero_bytes_file(good_package):
     result = lint_ft.package_has_no_zero_bytes_file(bad_package)
 
     assert not result
+
 
 def test_metadata_folder_is_flat(good_package):
     """The metadata folder should not have folder structure"""
@@ -168,11 +178,13 @@ def test_metadata_folder_has_random_folder(good_package):
 
     assert not result
 
+
 def test_metadata_folder_has_files(good_package):
     """The metadata folder should have one or more file"""
     result = lint_ft.metadata_folder_has_files(good_package)
 
     assert result
+
 
 def test_metadata_folder_empty(good_package):
     """Test that package fails function when the metadata does
@@ -185,11 +197,13 @@ def test_metadata_folder_empty(good_package):
 
     assert not result
 
+
 def test_metadata_has_correct_naming_convention(good_package):
     """The metadata file name should be in the accepted list"""
     result = lint_ft.metadata_has_correct_naming_convention(good_package)
 
     assert result
+
 
 def test_metadata_has_incorrect_naming_convention(good_package):
     """Test that package fails function when metadata file(s) has
@@ -202,12 +216,14 @@ def test_metadata_has_incorrect_naming_convention(good_package):
 
     assert not result
 
+
 def test_objects_folder_correct_structure(good_package):
     """objects folder should have a data folder, which includes four files:
     bag-info.txt, bagit.txt, manifest-md5.txt and tagmanifest-md5.txt"""
     result = lint_ft.objects_folder_correct_structure(good_package)
 
     assert result
+
 
 def test_objects_folder_incorrect_structure(good_package):
     """Test that package fails function if it does not have the data folder,
@@ -221,11 +237,13 @@ def test_objects_folder_incorrect_structure(good_package):
 
     assert not result
 
+
 def test_objects_folder_has_no_empty_folder(good_package):
     """The objects folder should not have any empty folders"""
     result = lint_ft.objects_folder_has_no_empty_folder(good_package)
 
     assert result
+
 
 def test_objects_folder_has_empty_folder(good_package):
     """Test that package fails function if its objects folder has empty folder(s)"""
@@ -238,11 +256,13 @@ def test_objects_folder_has_empty_folder(good_package):
 
     assert not result
 
+
 def test_valid_package(good_package):
     """Test that package returns 'valid' when all tests are passed"""
     result = lint_ft.lint_package(good_package)
 
     assert result == "valid"
+
 
 def test_invalid_package(good_package):
     """Test that package returns 'invalid' when failing some tests"""
@@ -254,6 +274,7 @@ def test_invalid_package(good_package):
     result = lint_ft.lint_package(bad_package)
 
     assert result == "invalid"
+
 
 def test_unclear_package(good_package):
     """Test that package returns 'needs review' when failing some tests"""
