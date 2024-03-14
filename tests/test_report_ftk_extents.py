@@ -1,4 +1,4 @@
-import digarch_scripts.report.report_ftk_extents as rfe
+import src.digarch_scripts.report.report_ftk_extents as rfe
 import pytest
 import json
 try:
@@ -15,7 +15,7 @@ def test_identify_all_ers(parsed_report):
     """Function should list every bookmark starting with ER"""
     ers = rfe.create_er_list(parsed_report)
 
-    just_ers = [er[0].split('/')[-1].split(':')[0] for er in ers]
+    just_ers = [er[0][-1].split(':')[0] for er in ers]
 
     for i in range(1, 12):
         assert f'ER {i}' in just_ers
@@ -27,39 +27,39 @@ def test_hierarchy_nests_down_correctly(parsed_report):
     ers = rfe.create_er_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
-    assert 'Extents Test papers/Series 1/Subseries(1)/ER 1: Text, 2023' in just_titles
-    assert 'Extents Test papers/Series 1/Subseries(1)/Subsubseries(2)/ER 2: File 15, 2023' in just_titles
+    assert ['Extents Test papers', 'Series 1', 'Subseries(1)', 'ER 1: Text, 2023'] in just_titles
+    assert ['Extents Test papers', 'Series 1', 'Subseries(1)', 'Subsubseries(2)', 'ER 2: File 15, 2023'] in just_titles
 
 def test_hierarchy_nests_empty_subseries(parsed_report):
     """Function should include organization hierarchy including empty levels"""
     ers = rfe.create_er_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
-    assert 'Extents Test papers/Series 1/Subseries(1)/Subsubseries(2)/Subsubsubseries(3)/Subsubsubsubseries(4)/ER 10: Folder 2, 2023' in just_titles
+    assert ['Extents Test papers', 'Series 1', 'Subseries(1)', 'Subsubseries(2)', 'Subsubsubseries(3)', 'Subsubsubsubseries(4)', 'ER 10: Folder 2, 2023'] in just_titles
 
 def test_hierarchy_nests_up_correctly(parsed_report):
     """Function should be able to step down in hierarchy"""
     ers = rfe.create_er_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
-    assert 'Extents Test papers/Series 1/Subseries(1)/Subsubseries(2) the second/ER 23: File 17, 2023' in just_titles
-    assert 'Extents Test papers/Series 1/Subseries(1) the second/ER 4: File 18, 2023' in just_titles
+    assert ['Extents Test papers', 'Series 1', 'Subseries(1)', 'Subsubseries(2) the second', 'ER 23: File 17, 2023'] in just_titles
+    assert ['Extents Test papers', 'Series 1', 'Subseries(1) the second', 'ER 4: File 18, 2023'] in just_titles
 
 def test_hierarchy_nests_reverse_order_bookmarks(parsed_report):
     """Function should parse bottom-up hierarchy"""
     ers = rfe.create_er_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
-    assert 'Extents Test papers/Series 2/ER 9: File 20,2023' in just_titles
-    assert 'Extents Test papers/Series 2/Subseries(1) of Series 2/ER 8: File 2, 2023' in just_titles
-    assert 'Extents Test papers/Series 2/Subseries(1) of Series 2/Subsubseries(2) of Series 2/ER 7: File 19, 2023' in just_titles
+    assert ['Extents Test papers', 'Series 2', 'ER 9: File 20,2023'] in just_titles
+    assert ['Extents Test papers', 'Series 2', 'Subseries(1) of Series 2', 'ER 8: File 2, 2023'] in just_titles
+    assert ['Extents Test papers', 'Series 2', 'Subseries(1) of Series 2', 'Subsubseries(2) of Series 2', 'ER 7: File 19, 2023'] in just_titles
 
 def test_er_outside_of_series(parsed_report):
     """Function should include capture ERs even if they're not in a series"""
     ers = rfe.create_er_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
-    assert 'Extents Test papers/ER 10: File 21,2023' in just_titles
+    assert ['Extents Test papers', 'ER 10: File 21,2023'] in just_titles
 
 def test_correct_report_many_files(parsed_report):
     """Test if file count and byte count is completed correctly"""
@@ -115,34 +115,34 @@ def test_warn_on_no_files_in_er(parsed_report, caplog):
     """Test if warning is logged for empty bookmarks and ER is omitted from report"""
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
-    er_with_no_files = [['ER 5: No Files, 2023', 'bk27001']]
+    er_with_no_files = [[['hier', 'archy', 'list'], 'bk27001', 'ER 5: No Files, 2023']]
 
     extents = rfe.add_extents_to_ers(er_with_no_files, bookmark_tables)
 
     assert extents == []
 
-    log_msg = f'{er_with_no_files[0][0]} does not contain any files. It will be omitted from the report.'
+    log_msg = f'{er_with_no_files[0][-1]} does not contain any files. It will be omitted from the report.'
     assert log_msg in caplog.text
 
 def test_warn_on_a_no_byte_file_in_er(parsed_report, caplog):
     """Test if warning is logged for empty files in an ER"""
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
-    er_with_no_bytes = [['ER 6: Zero Length, 2023', 'bk28001']]
+    er_with_no_bytes = [[['hier', 'archy', 'list'], 'bk28001', 'ER 6: Zero Length, 2023']]
     rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
-    log_msg = f'{er_with_no_bytes[0][0]} contains the following 0-byte file: file00.txt. Review this file with the processing archivist.'
+    log_msg = f'{er_with_no_bytes[0][-1]} contains the following 0-byte file: file00.txt. Review this file with the processing archivist.'
     assert log_msg in caplog.text
 
 def test_warn_on_no_bytes_in_er(parsed_report, caplog):
     """Test if warning is logged for bookmarks with 0 bytes total and ER is omitted from report"""
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
-    er_with_no_bytes = [['ER 6: Zero Length, 2023', 'bk28001']]
+    er_with_no_bytes = [[['hier', 'archy', 'list'], 'bk28001', 'ER 6: Zero Length, 2023']]
     extents = rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
 
     assert extents == []
 
-    log_msg = f'{er_with_no_bytes[0][0]} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.'
+    log_msg = f'{er_with_no_bytes[0][-1]} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.'
     assert log_msg in caplog.text
 
 
@@ -194,6 +194,18 @@ def test_skipped_ER_number_behavior(parsed_report, caplog):
 
     for i in range(13, 23):
         assert f'Collection uses ER 1 to ER 23. ER {i} is skipped. Review the ERs with the processing archivist' in caplog.text
+
+
+def test_ER_missing_number_behavior(parsed_report, caplog):
+    """Test if script flags when ER number is reused"""
+    ers = rfe.create_er_list(parsed_report)
+    ers[0][2] = "ER ?: File 21,2023"
+
+    rfe.audit_ers(ers)
+
+    log_msg = f'ER is missing a number: ER ?: File 21,2023. Review the ERs with the processing archivist'
+    assert log_msg in caplog.text
+
 
 def test_repeated_ER_number_behavior(parsed_report, caplog):
     """Test if script flags when ER number is reused"""
