@@ -1,4 +1,4 @@
-import digarch_scripts.report.report_ftk_extents as rfe
+import src.digarch_scripts.report.report_ftk_extents as rfe
 import pytest
 import json
 try:

@@ -1,4 +1,4 @@
-import digarch_scripts.report.report_hdd_extents as rhe
+import src.digarch_scripts.report.report_hdd_extents as rhe
 import pytest
 import shutil
 import re
