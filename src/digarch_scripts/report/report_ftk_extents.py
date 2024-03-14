@@ -67,7 +67,7 @@ def _make_parser():
 
 def create_er_list(
     tree: etree.ElementTree
-) -> list[list[str, str]]:
+) -> list[list[list[str], str, str]]:
 
     '''
     This transforms the table of contents into a list of lists
@@ -108,7 +108,7 @@ def create_er_list(
             if possible_ref and hierarchy[-1].startswith('ER'):
                 refid = possible_ref[0].get('ref-id')
                 ers.append(
-                    ['/'.join(hierarchy.copy()), refid, hierarchy[-1]]
+                    [hierarchy.copy(), refid, hierarchy[-1]]
                 )
 
     audit_ers(ers)
@@ -116,7 +116,7 @@ def create_er_list(
     return ers
 
 
-def audit_ers(ers: list[list[str, str, str]]) -> None:
+def audit_ers(ers: list[list[list[str], str, str]]) -> None:
     er_numbers_used = {}
     for er in ers:
         number = re.match(r'ER (\d+):', er[2])
@@ -189,7 +189,7 @@ def transform_bookmark_tables(
 
 
 def add_extents_to_ers(
-    er_list: list[list[str, str]],
+    er_list: list[list[list[str], str, str]],
     bookmark_tables: list[dict]
 ) -> list[list[str, int, int]]:
 
@@ -203,7 +203,7 @@ def add_extents_to_ers(
 
     for er in er_list:
         bookmark_id = er[1]
-        er_name = er[0].split('/')[-1]
+        er_name = er[-1]
         size, count = get_er_report(bookmark_tables, bookmark_id, er_name)
 
         if count == 0:
@@ -224,7 +224,7 @@ def get_er_report(
     er_files: list[dict],
     bookmark_id: str,
     er_name: str
-) -> tuple([int, int]):
+) -> tuple[int, int]:
 
     '''
     extract the total file size and file count for a given bookmark ID
@@ -258,7 +258,7 @@ def get_er_report(
 
 
 def create_report(
-    input: list[str, int, int],
+    input: list[list[str], int, int],
     report: dict
 ) -> dict:
 
@@ -268,17 +268,17 @@ def create_report(
     Returns a nested dictionary
     '''
 
-    if not '/' in input[0]:
-        number, name = input[0].split(':', maxsplit=1)
+    if len(input[0]) == 1:
+        number, name = input[0][0].split(':', maxsplit=1)
         report['children'].append({
-            'title': input[0],
+            'title': input[0][0],
             'er_number': number,
             'er_name': name.strip(),
             'file_size': input[1],
             'file_count': input[2]
         })
     else:
-        parent, child = input[0].split('/', maxsplit=1)
+        parent, child = input[0][0], input[0][1:]
         input[0] = child
         for item in report['children']:
             if item['title'] == parent:
