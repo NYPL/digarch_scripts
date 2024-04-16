@@ -9,12 +9,12 @@ import json
 def arranged_collection(tmp_path: pathlib.Path):
     path = tmp_path.joinpath('hdd')
     shutil.copytree('tests/fixtures/report', path)
-    return path
+    coll_name_folder = path / 'M12345_FAcomponents'
+    return coll_name_folder
 
 def test_identify_all_ers(arranged_collection):
     """Function should list every folder starting with ER"""
     ers = rhe.get_ers(arranged_collection)
-    print(ers)
     just_ers = [re.search(r'ER\s\d+', er[0]).group() for er in ers]
 
     for i in range(1, 4):
@@ -28,24 +28,23 @@ def test_hierarchy_nests_down_correctly(arranged_collection):
     These are not great tests, but I'm not sure what the better strategy would be"""
     ers = rhe.get_ers(arranged_collection)
     just_titles = [er[0] for er in ers]
-    print(just_titles)
 
-    assert 'M12345_FAcomponents/Series 1/Subseries(1)/ER 1 Text, 2023' in just_titles
-    assert 'M12345_FAcomponents/Series 1/Subseries(1)/Subsubseries(2)/ER 2 File 15, 2023' in just_titles
+    assert 'Series 1/Subseries(1)/ER 1 Text, 2023' in just_titles
+    assert 'Series 1/Subseries(1)/Subsubseries(2)/ER 2 File 15, 2023' in just_titles
 
 def test_hierarchy_nests_empty_subseries(arranged_collection):
     """Function should include organization hierarchy including empty levels"""
     ers = rhe.get_ers(arranged_collection)
     just_titles = [er[0] for er in ers]
 
-    assert 'M12345_FAcomponents/Series 1/Subseries(1)/Subsubseries(2)/Subsubsubseries(3)/Subsubsubsubseries(4)/ER 10 Folder 2, 2023' in just_titles
+    assert 'Series 1/Subseries(1)/Subsubseries(2)/Subsubsubseries(3)/Subsubsubsubseries(4)/ER 10 Folder 2, 2023' in just_titles
 
 def test_er_outside_of_series(arranged_collection):
     """Function should include capture ERs even if they're not in a series"""
     ers = rhe.get_ers(arranged_collection)
     just_titles = [er[0] for er in ers]
 
-    assert 'M12345_FAcomponents/ER 10 File 21,2023' in just_titles
+    assert 'ER 10 File 21,2023' in just_titles
 
 def test_correct_report_many_files(arranged_collection):
     """Test if file count and byte count is completed correctly"""
@@ -143,12 +142,11 @@ def test_extract_collection_name(arranged_collection):
 
     assert coll_name == 'M12345_FAcomponents'
 
-def test_warn_on_bad_collection_name(arranged_collection, caplog):
+def test_warn_on_bad_collection_name(arranged_collection: pathlib.Path, caplog):
     """Test if collection name is taken from XML"""
-    coll_name_folder = arranged_collection / 'M12345_FAcomponents'
-    coll_name_folder.rename(arranged_collection / 'Test_Coll')
-    coll_name = rhe.extract_collection_title(arranged_collection)
-    log_msg = 'Cannot find CollectionID_FAcomponents directory. Please use CollectionID_FAcomponents naming convention for the directory containing all ERs.'
+    bad_coll_dir = arranged_collection.rename(arranged_collection.parent / 'Test_Coll')
+    rhe.extract_collection_title(bad_coll_dir)
+    log_msg = f'Parent folder does not match CollectionID_FAcomponents naming convention: '
     assert log_msg in caplog.text
 
 def test_ER_missing_number_behavior(arranged_collection, caplog):
