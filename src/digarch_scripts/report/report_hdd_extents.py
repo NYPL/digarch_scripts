@@ -4,6 +4,7 @@ import json
 import pathlib
 import logging
 import re
+
 LOGGER = logging.getLogger(__name__)
 
 def parse_args():
@@ -67,7 +68,7 @@ def get_ers(
                     for f in files:
                         count += 1
                         fp = os.path.join(path, f)
-                        if os.path.getsize(fp) == 0:
+                        if os.path.getsize(fp) == 0 and not os.path.basename(fp).startswith('Icon'):
                             LOGGER.warning(
                             f'{possible_er.name} contains the following 0-byte file: {f}. Review this file with the processing archivist.')
                         size += os.path.getsize(fp)
