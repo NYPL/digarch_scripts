@@ -15,7 +15,6 @@ def arranged_collection(tmp_path: pathlib.Path):
 def test_identify_all_ers(arranged_collection):
     """Function should list every folder starting with ER"""
     ers = rhe.get_ers(arranged_collection)
-    print(ers)
     just_ers = [re.search(r'ER\s\d+', er[0]).group() for er in ers]
 
     for i in range(1, 4):
@@ -29,7 +28,6 @@ def test_hierarchy_nests_down_correctly(arranged_collection):
     These are not great tests, but I'm not sure what the better strategy would be"""
     ers = rhe.get_ers(arranged_collection)
     just_titles = [er[0] for er in ers]
-    print(just_titles)
 
     assert 'Series 1/Subseries(1)/ER 1 Text, 2023' in just_titles
     assert 'Series 1/Subseries(1)/Subsubseries(2)/ER 2 File 15, 2023' in just_titles

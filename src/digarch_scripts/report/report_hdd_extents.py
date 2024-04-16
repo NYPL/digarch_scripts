@@ -88,7 +88,6 @@ def get_ers(
     return ers
 
 def extract_collection_title(facomponent_dir: pathlib.Path) -> str:
-    print(facomponent_dir.name)
     if re.match(r'M\d+\_FAcomponents', facomponent_dir.name):
         return facomponent_dir.name
     else:
@@ -148,7 +147,8 @@ def process_item(
     report: dict
 ) -> dict:
     if not '/' in input[0]:
-        parts = re.match(r'(ER \d+)\s(.*)', input[0])
+        # although not recommended, an extra character is allowed after the ER number
+        parts = re.match(r'(ER \d+)[^\d]?\s(.*)', input[0])
         report['children'].append({
             'title': input[0],
             'er_number': parts.group(1),
