@@ -18,16 +18,16 @@ def transfer_files(tmp_path: Path, request):
 def args(transfer_files):
     args = [
         "script_name",
-        "--image",
-        str(transfer_files / "image.img"),
+        "--images_folder",
+        str(transfer_files / "images"),
         "--dest",
         str(transfer_files),
-        "--id",
-        "ACQ_1234_123456",
-        "--streams",
+        "--acqid",
+        "ACQ_1234",
+        "--streams_folder",
         str(transfer_files / "streams"),
-        "--log",
-        str(transfer_files / "process.log"),
+        "--logs_folder",
+        str(transfer_files / "logs"),
     ]
     return args
 
@@ -109,7 +109,7 @@ def test_full_run(
     monkeypatch.setattr("sys.argv", args)
     pi.main()
 
-    pkg_dir = Path(args[4]) / args[6][:-7] / args[6]
-    assert pkg_dir.exists()
+    acq_dir = Path(args[4]) / args[6]
+    assert acq_dir.exists()
 
-    assert "process.log" in [x.name for x in (pkg_dir / "metadata").iterdir()]
+    assert "ACQ_1234_123456" in [x.name for x in acq_dir.iterdir()]
