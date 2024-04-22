@@ -36,7 +36,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def create_base_dir(dest: Path, id: str) -> Path:
+def create_acq_dir(dest: Path, acq_id: str) -> Path:
+    acq_dir = dest / acq_id
+    if acq_dir.exists():
+        LOGGER.info(f"Acquisition directory already exits: {acq_dir}")
+        return acq_dir
+
+    try:
+        acq_dir.mkdir(parents=True)
+    except PermissionError:
+        raise PermissionError(f"{dest} is not writable")
+    return acq_dir
+
+
+def create_package_dir(dest: Path, id: str) -> Path:
     acq_id = id.rsplit("_", 1)[0]
     package_base = dest / acq_id / id
     if package_base.exists():

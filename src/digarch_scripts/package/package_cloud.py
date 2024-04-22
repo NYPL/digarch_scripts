@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
 def main():
     args = parse_args()
 
-    base_dir = pb.create_base_dir(args.dest, args.id)
+    base_dir = pb.create_package_dir(args.dest, args.id)
     pb.move_metadata_file(args.log, base_dir)
     pb.create_bag_in_objects(args.payload, args.md5, base_dir)
     pb.validate_bag_in_payload(base_dir)

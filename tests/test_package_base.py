@@ -44,24 +44,36 @@ def args(transfer_files):
     return args
 
 
-def test_create_package_basedir_exc_on_readonly(tmp_path: Path, id: str):
+CREATE_DIR = [(pb.create_acq_dir, 'ACQ_1234'), (pb.create_package_dir, 'ACQ_1234_123456')]
+@pytest.mark.parametrize("tested_function,id", CREATE_DIR)
+def test_create_dir_exc_on_readonly(tmp_path: Path, id: str, tested_function):
     """Test that package folder maker reports permission error"""
 
     # make folder read-only
     os.chmod(tmp_path, 0o500)
 
     with pytest.raises(PermissionError) as exc:
-        pb.create_base_dir(tmp_path, id)
+        tested_function(tmp_path, id)
 
     # change back to allow clean-up (might not be necessary)
     os.chmod(tmp_path, 0o777)
     assert f"{str(tmp_path)} is not writable" in str(exc.value)
 
 
-def test_create_package_basedir(tmp_path: Path, id: str):
+def test_create_acq_dir(tmp_path: Path):
     """Test that package folder maker makes ACQ and Carrier folders"""
 
-    base_dir = pb.create_base_dir(tmp_path, id)
+    id = 'ACQ_1234'
+    base_dir = pb.create_acq_dir(tmp_path, id)
+
+    assert base_dir.name == id
+    assert base_dir.parent.name == tmp_path.name
+
+
+def test_create_pkg_dir(tmp_path: Path, id: str):
+    """Test that package folder maker makes ACQ and Carrier folders"""
+
+    base_dir = pb.create_package_dir(tmp_path, id)
 
     assert base_dir.name == id
     assert base_dir.parent.name == id[:-7]
@@ -71,7 +83,7 @@ def test_create_package_basedir_with_existing_acq_dir(tmp_path: Path, id: str):
     """Test that package folder maker respect existing ACQ folder"""
 
     (tmp_path / id[:-7]).mkdir()
-    base_dir = pb.create_base_dir(tmp_path, id)
+    base_dir = pb.create_package_dir(tmp_path, id)
 
     assert base_dir.name == id
     assert base_dir.parent.name == id[:-7]
@@ -84,7 +96,7 @@ def test_error_on_existing_package_dir(tmp_path: Path, id: str):
     base_dir.mkdir(parents=True)
 
     with pytest.raises(FileExistsError) as exc:
-        pb.create_base_dir(tmp_path, id)
+        pb.create_package_dir(tmp_path, id)
 
     assert f"{base_dir} already exists. Make sure you are using the correct ID" in str(
         exc.value
@@ -93,7 +105,7 @@ def test_error_on_existing_package_dir(tmp_path: Path, id: str):
 
 @pytest.fixture
 def package_base_dir(tmp_path: Path, id: str):
-    return pb.create_base_dir(tmp_path, id)
+    return pb.create_package_dir(tmp_path, id)
 
 
 MOVE_FILE = [(pb.move_metadata_file, 'metadata'), (pb.move_diskimage_file, 'images'), (pb.move_stream_file, 'streams')]
