@@ -116,7 +116,7 @@ def test_do_not_overwrite_metadata(package_base_dir: Path, log: Path):
         pb.move_metadata_file(log, package_base_dir)
 
     assert log.exists()
-    assert f"{rclone_log} already exists. Not moving." in str(exc.value)
+    assert f"{rclone_log} already exists in metadata folder. Not moving." in str(exc.value)
 
 
 def test_move_multiple_metadata(package_base_dir: Path, log: Path, md5_manifest: Path):
@@ -146,7 +146,7 @@ def test_partial_halt_multiple_metadata(
 
     assert log.exists()
     assert (
-        f"already exists. Not moving. One or more metadata files may have already been moved to new location"
+        f"already exists in metadata folder. Not moving. One or more metadata files may have already been moved to new location"
         in str(exc.value)
     )
 

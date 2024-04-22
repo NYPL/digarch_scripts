@@ -51,26 +51,63 @@ def create_base_dir(dest: Path, id: str) -> Path:
     return package_base
 
 
+def move_file(file_path: Path, pkg_dir: Path, dest: str) -> None:
+    dest_dir = pkg_dir / dest
+    if not dest_dir.exists():
+        dest_dir.mkdir()
+
+    new_file_path = dest_dir / file_path.name
+    if new_file_path.exists():
+        raise FileExistsError(f"{new_file_path} already exists in {dest} folder. Not moving.")
+
+    file_path.rename(new_file_path)
+    return None
+
+
 def move_metadata_file(md_path: Path, pkg_dir: Path) -> None:
-    md_dir = pkg_dir / "metadata"
-    if not md_dir.exists():
-        md_dir.mkdir()
-
-    new_md_path = md_dir / md_path.name
-    if new_md_path.exists():
-        raise FileExistsError(f"{new_md_path} already exists. Not moving.")
-
-    md_path.rename(new_md_path)
+    move_file(md_path, pkg_dir, 'metadata')
     return None
 
 
 def move_metadata_files(md_paths: list[Path], pkg_dir: Path) -> None:
     for md_path in md_paths:
         try:
-            move_metadata_file(md_path, pkg_dir)
+            move_file(md_path, pkg_dir, 'metadata')
         except FileExistsError as e:
             raise Warning(
                 f"{e} One or more metadata files may have already been moved to new location"
+            )
+    return None
+
+
+def move_diskimage_file(image_path: Path, pkg_dir: Path) -> None:
+    move_file(image_path, pkg_dir, 'image')
+    return None
+
+
+def move_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
+    for image_path in image_paths:
+        try:
+            move_file(image_path, pkg_dir, 'images')
+        except FileExistsError as e:
+            raise Warning(
+                f"{e} One or more disk images may have already been moved to new location"
+            )
+    return None
+
+
+def move_stream_file(md_path: Path, pkg_dir: Path) -> None:
+    move_file(md_path, pkg_dir, 'streams')
+    return None
+
+
+def move_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
+    for image_path in image_paths:
+        try:
+            move_file(image_path, pkg_dir, 'streams')
+        except FileExistsError as e:
+            raise Warning(
+                f"{e} One or more disk image streams may have already been moved to new location"
             )
     return None
 
