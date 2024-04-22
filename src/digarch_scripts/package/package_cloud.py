@@ -1,11 +1,13 @@
 import argparse
-from datetime import date
 import logging
 import os
-from pathlib import Path
 import re
+from datetime import date
+from pathlib import Path
 
 import bagit
+
+import digarch_scripts.package.package_base as pb
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -35,122 +37,15 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-def create_base_dir(dest: Path, id: str) -> Path:
-    acq_id = id.rsplit("_", 1)[0]
-    package_base = dest / acq_id / id
-    if package_base.exists():
-        raise FileExistsError(
-            f"{package_base} already exists. Make sure you are using the correct ID"
-        )
-
-    try:
-        package_base.mkdir(parents=True)
-    except PermissionError:
-        raise PermissionError(f"{dest} is not writable")
-    return package_base
-
-def move_metadata_file(md_path: Path, pkg_dir: Path) -> None:
-    md_dir = pkg_dir / "metadata"
-    if not md_dir.exists():
-        md_dir.mkdir()
-
-    new_md_path = md_dir / md_path.name
-    if new_md_path.exists():
-        raise FileExistsError(f"{new_md_path} already exists. Not moving.")
-
-    md_path.rename(new_md_path)
-    return None
-
-def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> None:
-    bag_dir = pkg_dir / "objects"
-    bag_dir.mkdir()
-    move_payload(payload_path, bag_dir)
-    convert_to_bagit_manifest(md5_path, bag_dir)
-    # generate baginfo.txt and bagit.txt (copying code snippet from bagit)
-    create_bag_tag_files(bag_dir)
-    return None
-
-def move_payload(payload_path: Path, bag_dir: Path) -> None:
-    #instantiate a var for objects dir
-    payload_dir = bag_dir / "data"
-    #if the object folder does not exist create it
-    if not payload_dir.exists():
-        payload_dir.mkdir(parents=True)
-    else:
-        raise FileExistsError(f"{payload_dir} already exists. Not moving files.")
-
-    for a_file in payload_path.iterdir():
-        new_ob_path = payload_dir / a_file.name
-        #if a payload file is already in the object directory do not move, raise error
-        if new_ob_path.exists():
-             raise FileExistsError(f"{new_ob_path} already exists. Not moving.")
-
-        a_file.rename(new_ob_path)
-    return None
-
-def convert_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
-    #check for manifest
-    new_md5_path = bag_dir / "manifest-md5.txt"
-    if new_md5_path.exists():
-        raise FileExistsError("manifest-md5.txt already exists, review package")
-
-    with open(md5_path, "r") as f:
-        manifest_data = f.readlines()
-
-    updated_manifest = [
-        line.replace("  ", "  data/") for line in manifest_data
-    ]
-    #re-writes the manifest lines
-    with open(md5_path, "w") as f:
-        f.writelines(updated_manifest)
-    #move md5 file to manifest-md5.txt in bag
-    md5_path.rename(new_md5_path)
-
-    return None
-
-def create_bag_tag_files(bag_dir: Path):
-    txt = """BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8\n"""
-    with open(bag_dir / "bagit.txt", "w") as bagit_file:
-        bagit_file.write(txt)
-
-    bag_info = {}
-    bag_info["Bagging-Date"] = date.strftime(date.today(), "%Y-%m-%d")
-    bag_info["Bag-Software-Agent"] = "package_cloud.py"
-    total_bytes, total_files = get_oxum(bag_dir / "data")
-    bag_info["Payload-Oxum"] = f"{total_bytes}.{total_files}"
-    bagit._make_tag_file(bag_dir / "bag-info.txt", bag_info)
-
-
-def get_oxum(payload_dir: Path) -> (int, int):
-    total_bytes = 0
-    total_files = 0
-
-    for payload_file in payload_dir.rglob('*'):
-        if payload_file.is_file():
-            total_files += 1
-            total_bytes += os.stat(payload_file).st_size
-
-    return total_bytes, total_files
-
-
-def validate_bag_in_payload(pkg_dir: Path) -> None:
-    bag_dir = pkg_dir / "objects"
-    bag = bagit.Bag(str(bag_dir))
-    try:
-        bag.validate(completeness_only=True)
-        LOGGER.info(f"{bag.path} is valid.")
-    except bagit.BagValidationError:
-        LOGGER.warn(f"{bag.path} is not valid. Check the bag manifest and oxum.")
-    return None
-
 
 def main():
     args = parse_args()
 
-    base_dir = create_base_dir(args.dest, args.id)
-    move_metadata_file(args.log, base_dir)
-    create_bag_in_objects(args.payload, args.md5, base_dir)
-    validate_bag_in_payload(base_dir)
+    base_dir = pb.create_base_dir(args.dest, args.id)
+    pb.move_metadata_file(args.log, base_dir)
+    pb.create_bag_in_objects(args.payload, args.md5, base_dir)
+    pb.validate_bag_in_payload(base_dir)
+
 
 if __name__ == "__main__":
     main()
