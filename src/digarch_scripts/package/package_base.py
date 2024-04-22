@@ -63,53 +63,39 @@ def move_file(file_path: Path, pkg_dir: Path, dest: str) -> None:
     file_path.rename(new_file_path)
     return None
 
+def move_files(file_paths: list[Path], pkg_dir: Path, dest: str) -> None:
+    for file_path in file_paths:
+        try:
+            move_file(file_path, pkg_dir, dest)
+        except FileExistsError as e:
+            raise Warning(
+                f"{e} One or more files may have already been moved to the {dest} folder"
+            )
+    return None
+
 
 def move_metadata_file(md_path: Path, pkg_dir: Path) -> None:
-    move_file(md_path, pkg_dir, 'metadata')
-    return None
+    return move_file(md_path, pkg_dir, 'metadata')
 
 
 def move_metadata_files(md_paths: list[Path], pkg_dir: Path) -> None:
-    for md_path in md_paths:
-        try:
-            move_file(md_path, pkg_dir, 'metadata')
-        except FileExistsError as e:
-            raise Warning(
-                f"{e} One or more metadata files may have already been moved to new location"
-            )
-    return None
+    return move_files(md_paths, pkg_dir, 'metadata')
 
 
 def move_diskimage_file(image_path: Path, pkg_dir: Path) -> None:
-    move_file(image_path, pkg_dir, 'image')
-    return None
+    return move_file(image_path, pkg_dir, 'images')
 
 
 def move_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
-    for image_path in image_paths:
-        try:
-            move_file(image_path, pkg_dir, 'images')
-        except FileExistsError as e:
-            raise Warning(
-                f"{e} One or more disk images may have already been moved to new location"
-            )
-    return None
+    return move_files(image_paths, pkg_dir, 'images')
 
 
 def move_stream_file(md_path: Path, pkg_dir: Path) -> None:
-    move_file(md_path, pkg_dir, 'streams')
-    return None
+    return move_file(md_path, pkg_dir, 'streams')
 
 
-def move_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
-    for image_path in image_paths:
-        try:
-            move_file(image_path, pkg_dir, 'streams')
-        except FileExistsError as e:
-            raise Warning(
-                f"{e} One or more disk image streams may have already been moved to new location"
-            )
-    return None
+def move_stream_files(md_path: Path, pkg_dir: Path) -> None:
+    return move_files(md_path, pkg_dir, 'streams')
 
 
 def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> None:

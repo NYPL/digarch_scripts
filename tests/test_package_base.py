@@ -96,57 +96,63 @@ def package_base_dir(tmp_path: Path, id: str):
     return pb.create_base_dir(tmp_path, id)
 
 
-def test_move_metadata(package_base_dir: Path, log: Path):
+MOVE_FILE = [(pb.move_metadata_file, 'metadata'), (pb.move_diskimage_file, 'images'), (pb.move_stream_file, 'streams')]
+@pytest.mark.parametrize("test_function,dest", MOVE_FILE)
+def test_move_file(package_base_dir: Path, log: Path, test_function, dest: str):
     """Test that metadata folder and log file are moved successfully"""
 
-    pb.move_metadata_file(log, package_base_dir)
+    test_function(log, package_base_dir)
 
     assert not log.exists()
-    assert (package_base_dir / "metadata" / "rclone.log").exists()
+    assert (package_base_dir / dest / "rclone.log").exists()
 
 
-def test_do_not_overwrite_metadata(package_base_dir: Path, log: Path):
+@pytest.mark.parametrize("test_function,dest", MOVE_FILE)
+def test_do_not_overwrite_file(package_base_dir: Path, log: Path, test_function, dest: str):
     """Test that log file is not moved if a same name file exists in dest"""
 
-    rclone_log = package_base_dir / "metadata" / log.name
+    rclone_log = package_base_dir / dest / log.name
     rclone_log.parent.mkdir()
     rclone_log.touch()
 
     with pytest.raises(FileExistsError) as exc:
-        pb.move_metadata_file(log, package_base_dir)
+        test_function(log, package_base_dir)
 
     assert log.exists()
-    assert f"{rclone_log} already exists in metadata folder. Not moving." in str(exc.value)
+    assert f"{rclone_log} already exists in {dest} folder. Not moving." in str(exc.value)
 
 
-def test_move_multiple_metadata(package_base_dir: Path, log: Path, md5_manifest: Path):
+MOVE_FILES = [(pb.move_metadata_files, 'metadata'), (pb.move_diskimage_files, 'images'), (pb.move_stream_files, 'streams')]
+@pytest.mark.parametrize("test_function,dest", MOVE_FILES)
+def test_move_multiple_file(package_base_dir: Path, log: Path, md5_manifest: Path, test_function, dest: str):
     """Test that multiple files are moved successfully"""
 
     md_files = [log, md5_manifest]
-    pb.move_metadata_files(md_files, package_base_dir)
+    test_function(md_files, package_base_dir)
 
     for md_file in md_files:
         assert not md_file.exists()
-        assert (package_base_dir / "metadata" / md_file.name).exists()
+        assert (package_base_dir / dest / md_file.name).exists()
 
 
-def test_partial_halt_multiple_metadata(
-    package_base_dir: Path, log: Path, md5_manifest: Path
+@pytest.mark.parametrize("test_function,dest", MOVE_FILES)
+def test_partial_halt_multiple_files(
+    package_base_dir: Path, log: Path, md5_manifest: Path, test_function, dest: str
 ):
     """Test that warning is issued for multiple move if a single metadata move fails"""
 
-    rclone_log = package_base_dir / "metadata" / log.name
+    rclone_log = package_base_dir / dest / log.name
     rclone_log.parent.mkdir()
     rclone_log.touch()
 
     md_files = [log, md5_manifest]
 
     with pytest.raises(Warning) as exc:
-        pb.move_metadata_files(md_files, package_base_dir)
+        test_function(md_files, package_base_dir)
 
     assert log.exists()
     assert (
-        f"already exists in metadata folder. Not moving. One or more metadata files may have already been moved to new location"
+        f"already exists in {dest} folder. Not moving. One or more files may have already been moved to the {dest} folder"
         in str(exc.value)
     )
 
