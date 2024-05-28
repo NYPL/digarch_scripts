@@ -98,20 +98,48 @@ def move_metadata_files(md_paths: list[Path], pkg_dir: Path) -> None:
     return move_files(md_paths, pkg_dir, "metadata")
 
 
-def move_diskimage_file(image_path: Path, pkg_dir: Path) -> None:
-    return move_file(image_path, pkg_dir, "images")
-
-
 def move_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
-    return move_files(image_paths, pkg_dir, "images")
+    return move_files(image_paths, pkg_dir, "data")
 
 
-def move_stream_file(md_path: Path, pkg_dir: Path) -> None:
-    return move_file(md_path, pkg_dir, "streams")
+def move_stream_files(stream_paths: Path, pkg_dir: Path) -> None:
+    return move_files(stream_paths, pkg_dir, "data")
 
 
-def move_stream_files(md_path: Path, pkg_dir: Path) -> None:
-    return move_files(md_path, pkg_dir, "streams")
+def move_and_bag_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
+    bag_dir = pkg_dir / "images"
+    if not bag_dir.exists():
+        bag_dir.mkdir()
+    create_bagit_manifest(image_paths, bag_dir)
+    move_diskimage_files(image_paths, bag_dir)
+    create_bag_tag_files(bag_dir)
+
+    return None
+
+
+def move_and_bag_stream_files(stream_path: list[Path], pkg_dir: Path) -> None:
+    bag_dir = pkg_dir / "streams"
+    if not bag_dir.exists():
+        bag_dir.mkdir()
+    stream_paths = list(stream_path[0].iterdir())
+    create_bagit_manifest(stream_paths, bag_dir)
+    move_stream_files(stream_paths, bag_dir)
+    create_bag_tag_files(bag_dir)
+
+    return None
+
+
+def create_bagit_manifest(paths: list[Path], bag_dir: Path) -> None:
+    manifest_lines = []
+    for path in paths:
+        md5_hash = bagit.generate_manifest_lines(str(path), ["md5"])[0][1]
+        manifest_lines.append([md5_hash, Path("data") / path.name])
+
+    with open(bag_dir / "manifest-md5.txt", "w") as f:
+        for line in manifest_lines:
+            f.write(f"{line[0]}  {line[1]}")
+
+    return None
 
 
 def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> None:
@@ -121,6 +149,7 @@ def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> 
     convert_rclone_md5_to_bagit_manifest(md5_path, bag_dir)
     # generate baginfo.txt and bagit.txt (copying code snippet from bagit)
     create_bag_tag_files(bag_dir)
+
     return None
 
 
@@ -140,6 +169,7 @@ def move_payload(payload_path: Path, bag_dir: Path) -> None:
             raise FileExistsError(f"{new_ob_path} already exists. Not moving.")
 
         a_file.rename(new_ob_path)
+
     return None
 
 
@@ -162,17 +192,19 @@ def convert_rclone_md5_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
     return None
 
 
-def create_bag_tag_files(bag_dir: Path):
+def create_bag_tag_files(bag_dir: Path) -> None:
     txt = """BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8\n"""
     with open(bag_dir / "bagit.txt", "w") as bagit_file:
         bagit_file.write(txt)
 
     bag_info = {}
     bag_info["Bagging-Date"] = date.strftime(date.today(), "%Y-%m-%d")
-    bag_info["Bag-Software-Agent"] = "package_cloud.py"
+    bag_info["Bag-Software-Agent"] = "digarch_scripts"
     total_bytes, total_files = get_oxum(bag_dir / "data")
     bag_info["Payload-Oxum"] = f"{total_bytes}.{total_files}"
     bagit._make_tag_file(bag_dir / "bag-info.txt", bag_info)
+
+    return None
 
 
 def get_oxum(payload_dir: Path) -> tuple[int, int]:
