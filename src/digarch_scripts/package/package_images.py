@@ -101,26 +101,40 @@ def validate_carrier_files(carrier_files):
     for carrier_name in carrier_files:
         carrier = carrier_files[carrier_name]
         missing = []
-        for key in ['images', 'logs', 'streams']:
+        for key in ["images", "logs", "streams"]:
             if not key in carrier.keys():
                 missing.append(key)
 
         if missing:
-            LOGGER.warning(f'The following categories of files were not found for {carrier_name}: {", ".join(missing)} ')
+            LOGGER.warning(
+                f'The following categories of files were not found for {carrier_name}: {", ".join(missing)} '
+            )
 
-        if 'images' in carrier:
-            for image_file in carrier['images']:
+        if "images" in carrier:
+            for image_file in carrier["images"]:
                 if image_file.stat().st_size == 0:
-                    LOGGER.warning(f'The following image file is 0-bytes: {image_file}')
+                    LOGGER.warning(f"The following image file is 0-bytes: {image_file}")
+
+        if "streams" in carrier:
+            if not len(carrier["streams"]) == 1:
+                LOGGER.warning(
+                    f'Multiple folder of stream folders found for {carrier_name}. Only 1 allowed: {carrier["streams"]}'
+                )
 
     return
 
+
 def package_carriers(carrier_files: dict, acq_dir: Path) -> None:
     for carrier, files in carrier_files.items():
-        base_dir = pb.create_package_dir(acq_dir, carrier)
-        pb.move_metadata_files(files["logs"], base_dir)
-        pb.move_diskimage_files(files["images"], base_dir)
-        pb.move_stream_files(files["streams"], base_dir)
+        try:
+            base_dir = pb.create_package_dir(acq_dir, carrier)
+            pb.move_metadata_files(files["logs"], base_dir)
+            pb.move_and_bag_diskimage_files(files["images"], base_dir)
+            pb.move_and_bag_stream_files(files["streams"], base_dir)
+        except:
+            LOGGER.error(
+                f"Packaging incomplete for {carrier}. Address warnings manually."
+            )
 
 
 def main():
@@ -132,7 +146,9 @@ def main():
     if validate_carrier_files(carrier_files):
         package_carriers(carrier_files, args.dest)
     else:
-        LOGGER.error("1 or more errors with files for a carrier. Please address warnings and re-run")
+        LOGGER.error(
+            "1 or more errors with files for a carrier. Please address warnings and re-run"
+        )
 
 
 if __name__ == "__main__":
