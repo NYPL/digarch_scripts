@@ -44,7 +44,12 @@ def args(transfer_files):
     return args
 
 
-CREATE_DIR = [(pb.create_acq_dir, 'ACQ_1234'), (pb.create_package_dir, 'ACQ_1234_123456')]
+CREATE_DIR = [
+    (pb.create_acq_dir, "ACQ_1234"),
+    (pb.create_package_dir, "ACQ_1234_123456"),
+]
+
+
 @pytest.mark.parametrize("tested_function,id", CREATE_DIR)
 def test_create_dir_exc_on_readonly(tmp_path: Path, id: str, tested_function):
     """Test that package folder maker reports permission error"""
@@ -63,7 +68,7 @@ def test_create_dir_exc_on_readonly(tmp_path: Path, id: str, tested_function):
 def test_create_acq_dir(tmp_path: Path):
     """Test that package folder maker makes ACQ and Carrier folders"""
 
-    id = 'ACQ_1234'
+    id = "ACQ_1234"
     base_dir = pb.create_acq_dir(tmp_path, id)
 
     assert base_dir.name == id
@@ -108,7 +113,13 @@ def package_base_dir(tmp_path: Path, id: str):
     return pb.create_package_dir(tmp_path, id)
 
 
-MOVE_FILE = [(pb.move_metadata_file, 'metadata'), (pb.move_diskimage_file, 'images'), (pb.move_stream_file, 'streams')]
+MOVE_FILE = [
+    (pb.move_metadata_file, "metadata"),
+    (pb.move_diskimage_file, "images"),
+    (pb.move_stream_file, "streams"),
+]
+
+
 @pytest.mark.parametrize("test_function,dest", MOVE_FILE)
 def test_move_file(package_base_dir: Path, log: Path, test_function, dest: str):
     """Test that metadata folder and log file are moved successfully"""
@@ -120,7 +131,9 @@ def test_move_file(package_base_dir: Path, log: Path, test_function, dest: str):
 
 
 @pytest.mark.parametrize("test_function,dest", MOVE_FILE)
-def test_do_not_overwrite_file(package_base_dir: Path, log: Path, test_function, dest: str):
+def test_do_not_overwrite_file(
+    package_base_dir: Path, log: Path, test_function, dest: str
+):
     """Test that log file is not moved if a same name file exists in dest"""
 
     rclone_log = package_base_dir / dest / log.name
@@ -131,12 +144,22 @@ def test_do_not_overwrite_file(package_base_dir: Path, log: Path, test_function,
         test_function(log, package_base_dir)
 
     assert log.exists()
-    assert f"{rclone_log} already exists in {dest} folder. Not moving." in str(exc.value)
+    assert f"{rclone_log} already exists in {dest} folder. Not moving." in str(
+        exc.value
+    )
 
 
-MOVE_FILES = [(pb.move_metadata_files, 'metadata'), (pb.move_diskimage_files, 'images'), (pb.move_stream_files, 'streams')]
+MOVE_FILES = [
+    (pb.move_metadata_files, "metadata"),
+    (pb.move_diskimage_files, "images"),
+    (pb.move_stream_files, "streams"),
+]
+
+
 @pytest.mark.parametrize("test_function,dest", MOVE_FILES)
-def test_move_multiple_file(package_base_dir: Path, log: Path, md5_manifest: Path, test_function, dest: str):
+def test_move_multiple_file(
+    package_base_dir: Path, log: Path, md5_manifest: Path, test_function, dest: str
+):
     """Test that multiple files are moved successfully"""
 
     md_files = [log, md5_manifest]

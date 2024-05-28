@@ -71,10 +71,13 @@ def move_file(file_path: Path, pkg_dir: Path, dest: str) -> None:
 
     new_file_path = dest_dir / file_path.name
     if new_file_path.exists():
-        raise FileExistsError(f"{new_file_path} already exists in {dest} folder. Not moving.")
+        raise FileExistsError(
+            f"{new_file_path} already exists in {dest} folder. Not moving."
+        )
 
     file_path.rename(new_file_path)
     return None
+
 
 def move_files(file_paths: list[Path], pkg_dir: Path, dest: str) -> None:
     for file_path in file_paths:
@@ -88,27 +91,27 @@ def move_files(file_paths: list[Path], pkg_dir: Path, dest: str) -> None:
 
 
 def move_metadata_file(md_path: Path, pkg_dir: Path) -> None:
-    return move_file(md_path, pkg_dir, 'metadata')
+    return move_file(md_path, pkg_dir, "metadata")
 
 
 def move_metadata_files(md_paths: list[Path], pkg_dir: Path) -> None:
-    return move_files(md_paths, pkg_dir, 'metadata')
+    return move_files(md_paths, pkg_dir, "metadata")
 
 
 def move_diskimage_file(image_path: Path, pkg_dir: Path) -> None:
-    return move_file(image_path, pkg_dir, 'images')
+    return move_file(image_path, pkg_dir, "images")
 
 
 def move_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
-    return move_files(image_paths, pkg_dir, 'images')
+    return move_files(image_paths, pkg_dir, "images")
 
 
 def move_stream_file(md_path: Path, pkg_dir: Path) -> None:
-    return move_file(md_path, pkg_dir, 'streams')
+    return move_file(md_path, pkg_dir, "streams")
 
 
 def move_stream_files(md_path: Path, pkg_dir: Path) -> None:
-    return move_files(md_path, pkg_dir, 'streams')
+    return move_files(md_path, pkg_dir, "streams")
 
 
 def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> None:
