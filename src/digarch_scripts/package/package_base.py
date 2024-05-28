@@ -67,14 +67,14 @@ def create_package_dir(dest: Path, id: str) -> Path:
 def move_file(file_path: Path, pkg_dir: Path, dest: str) -> None:
     dest_dir = pkg_dir / dest
     if not dest_dir.exists():
-        dest_dir.mkdir()
+        dest_dir.mkdir(parents=True)
 
     new_file_path = dest_dir / file_path.name
     if new_file_path.exists():
         raise FileExistsError(
             f"{new_file_path} already exists in {dest} folder. Not moving."
         )
-
+    print(new_file_path)
     file_path.rename(new_file_path)
     return None
 
@@ -98,12 +98,8 @@ def move_metadata_files(md_paths: list[Path], pkg_dir: Path) -> None:
     return move_files(md_paths, pkg_dir, "metadata")
 
 
-def move_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
-    return move_files(image_paths, pkg_dir, "data")
-
-
-def move_stream_files(stream_paths: Path, pkg_dir: Path) -> None:
-    return move_files(stream_paths, pkg_dir, "data")
+def move_data_files(data_paths: list[Path], pkg_dir: Path) -> None:
+    return move_files(data_paths, pkg_dir, "data")
 
 
 def move_and_bag_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
@@ -111,7 +107,7 @@ def move_and_bag_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None
     if not bag_dir.exists():
         bag_dir.mkdir()
     create_bagit_manifest(image_paths, bag_dir)
-    move_diskimage_files(image_paths, bag_dir)
+    move_data_files(image_paths, bag_dir)
     create_bag_tag_files(bag_dir)
 
     return None
@@ -123,7 +119,7 @@ def move_and_bag_stream_files(stream_path: list[Path], pkg_dir: Path) -> None:
         bag_dir.mkdir()
     stream_paths = list(stream_path[0].iterdir())
     create_bagit_manifest(stream_paths, bag_dir)
-    move_stream_files(stream_paths, bag_dir)
+    move_data_files(stream_paths, bag_dir)
     create_bag_tag_files(bag_dir)
 
     return None

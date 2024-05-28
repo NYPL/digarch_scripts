@@ -115,8 +115,6 @@ def package_base_dir(tmp_path: Path, id: str):
 
 MOVE_FILE = [
     (pb.move_metadata_file, "metadata"),
-    (pb.move_diskimage_file, "images"),
-    (pb.move_stream_file, "streams"),
 ]
 
 
@@ -151,8 +149,7 @@ def test_do_not_overwrite_file(
 
 MOVE_FILES = [
     (pb.move_metadata_files, "metadata"),
-    (pb.move_diskimage_files, "images"),
-    (pb.move_stream_files, "streams"),
+    (pb.move_data_files, "data"),
 ]
 
 
@@ -161,6 +158,7 @@ def test_move_multiple_file(
     package_base_dir: Path, log: Path, md5_manifest: Path, test_function, dest: str
 ):
     """Test that multiple files are moved successfully"""
+    parts = dest.split('/')
 
     md_files = [log, md5_manifest]
     test_function(md_files, package_base_dir)
