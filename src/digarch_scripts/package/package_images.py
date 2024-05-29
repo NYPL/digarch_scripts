@@ -14,80 +14,26 @@ STREAM_EXTS = [""]
 
 
 def parse_args() -> argparse.Namespace:
-    def extant_path(p: str) -> Path:
-        path = Path(p)
-        if not path.exists():
-            raise argparse.ArgumentTypeError(f"{path} does not exist")
-        return path
-
-    def acq_id(id: str) -> Path:
-        pattern = r"ACQ_\d{4}"
-        old_pattern = r"M\d{4-6}"
-        if not re.match(pattern, id):
-            if not re.match(old_pattern, id):
-                raise argparse.ArgumentTypeError(
-                    f"{id} does not match the expected {type} pattern, {pattern}"
-                )
-        return id
-
-    parser = argparse.ArgumentParser(description="test")
-    parser.add_argument(
-        "--images_folder",
-        required=True,
-        type=extant_path,
-        help="Path to working images folder",
-    )
-    parser.add_argument(
-        "--dest", required=True, type=extant_path, help="Path to packaged images folder"
-    )
-    parser.add_argument("--acqid", required=True, type=acq_id, help="ACQ_####")
-    parser.add_argument(
-        "--logs_folder",
-        required=False,
-        type=extant_path,
-        help="Path to working logs folder",
-    )
-    parser.add_argument(
-        "--streams_folder",
-        required=False,
-        type=extant_path,
-        help="Path to working streams folder",
-    )
+    parser = pb.TransferParser(description="Create packages for all disk imaging files for a single acquisition.")
+    parser.add_acqid()
+    parser.add_images_folder()
+    parser.add_logs_folder()
+    parser.add_streams_folder()
+    parser.add_dest()
 
     return parser.parse_args()
 
 
-def find_category_of_carrier_files(
-    carrier_files: dict, acq_id: str, source_dir: Path, exts: list, category: str
-) -> dict:
-    for file in source_dir.iterdir():
-        if not file.suffix in exts:
-            continue
-        carrier_id_match = re.search(rf"{acq_id}_\d\d\d\d\d\d+", file.name)
-        if not carrier_id_match:
-            continue
-        carrier_id = carrier_id_match.group(0)
-
-        if not carrier_id in carrier_files:
-            carrier_files[carrier_id] = {category: []}
-        elif not category in carrier_files[carrier_id]:
-            carrier_files[carrier_id][category] = []
-
-        carrier_files[carrier_id][category].append(file)
-
-    return carrier_files
-
-
-def find_carrier_files(
+def find_carriers_image_files(
     acq_id: str, images_dir: Path, log_dir: Path, stream_dir: Path
 ) -> dict:
-    carrier_files = find_category_of_carrier_files(
+    carrier_files = pb.find_category_of_carrier_files(
         {}, acq_id, images_dir, IMG_EXTS, "images"
     )
-    carrier_files = find_category_of_carrier_files(
+    carrier_files = pb.find_category_of_carrier_files(
         carrier_files, acq_id, log_dir, LOG_EXTS, "logs"
     )
-    carrier_files = find_category_of_carrier_files(
+    carrier_files = pb.find_category_of_carrier_files(
         carrier_files, acq_id, stream_dir, STREAM_EXTS, "streams"
     )
 
@@ -97,7 +43,7 @@ def find_carrier_files(
     return carrier_files
 
 
-def validate_carrier_files(carrier_files: dict) -> bool:
+def validate_carriers_image_files(carrier_files: dict) -> bool:
     result = True
     for carrier_name in carrier_files:
         carrier = carrier_files[carrier_name]
@@ -129,7 +75,7 @@ def validate_carrier_files(carrier_files: dict) -> bool:
     return result
 
 
-def package_carriers(carrier_files: dict, acq_dir: Path) -> None:
+def package_carriers_image_files(carrier_files: dict, acq_dir: Path) -> None:
     for carrier, files in carrier_files.items():
         try:
             base_dir = pb.create_package_dir(acq_dir, carrier)
@@ -150,12 +96,12 @@ def package_carriers(carrier_files: dict, acq_dir: Path) -> None:
 def main():
     args = parse_args()
 
-    carrier_files = find_carrier_files(
+    carrier_files = find_carriers_image_files(
         args.acqid, args.images_folder, args.logs_folder, args.streams_folder
     )
 
-    if validate_carrier_files(carrier_files):
-        package_carriers(carrier_files, args.dest)
+    if validate_carriers_image_files(carrier_files):
+        package_carriers_image_files(carrier_files, args.dest)
     else:
         LOGGER.error(
             "1 or more errors with files for a carrier. Please address warnings and re-run"

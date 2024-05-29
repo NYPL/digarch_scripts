@@ -11,29 +11,107 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
 
-def parse_args() -> argparse.Namespace:
-    def extant_path(p: str) -> Path:
+class TransferParser(argparse.ArgumentParser):
+    def extant_path(self, p: str) -> Path:
         path = Path(p)
         if not path.exists():
             raise argparse.ArgumentTypeError(f"{path} does not exist")
         return path
 
-    def digital_carrier_label(id: str) -> Path:
-        pattern = r"ACQ_\d{4}_\d{6}"
-        if not re.match(r"ACQ_\d{4}_\d{6}", id):
-            raise argparse.ArgumentTypeError(
-                f"{id} does not match the expected {type} pattern, {pattern}"
-            )
+    def acq_id(self, id: str) -> Path:
+        pattern = r"ACQ_\d{4}"
+        old_pattern = r"M\d{4-6}"
+        if not re.match(pattern, id):
+            if not re.match(old_pattern, id):
+                raise argparse.ArgumentTypeError(
+                    f"{id} does not match the expected {type} pattern, {pattern}"
+                )
         return id
 
-    parser = argparse.ArgumentParser(description="test")
-    parser.add_argument("--payload", required=True, type=extant_path)
-    parser.add_argument("--log", required=True, type=extant_path)
-    parser.add_argument("--md5", required=True, type=extant_path)
-    parser.add_argument("--dest", required=True, type=extant_path)
-    parser.add_argument("--id", required=True, type=digital_carrier_label)
+    def add_acqid(self) -> None:
+        self.add_argument(
+            "--acqid", "--id", required=True, type=self.acq_id, help="ACQ_####"
+        )
 
-    return parser.parse_args()
+    def add_payload(self) -> None:
+        self.add_argument(
+            "--payload",
+            required=True,
+            type=self.extant_path,
+            help="Path to files transferred from single carrier",
+        )
+
+    def add_objects_folder(self) -> None:
+        self.add_argument(
+            "--objects-folder",
+            required=True,
+            type=self.extant_path,
+            help="Path to working folder with file transfers from all transfers",
+        )
+
+    def add_md5(self) -> None:
+        self.add_argument(
+            "--md5",
+            required=True,
+            type=self.extant_path,
+            help="Path to a log with md5 checksums, e.g. rclone or rsync log",
+        )
+
+    def add_images_folder(self) -> None:
+        self.add_argument(
+            "--images_folder",
+            required=True,
+            type=self.extant_path,
+            help="Path to working images folder",
+        )
+
+    def add_log(self) -> None:
+        self.add_argument(
+            "--log",
+            required=True,
+            type=self.extant_path,
+            help="Path to a log file from the transfer process",
+        )
+
+    def add_logs_folder(self) -> None:
+        self.add_argument(
+            "--logs_folder",
+            required=False,
+            type=self.extant_path,
+            help="Path to working folder with logs from all transfers",
+        )
+
+    def add_streams_folder(self) -> None:
+        self.add_argument(
+            "--streams_folder",
+            required=False,
+            type=self.extant_path,
+            help="Path to working folder with streams from all transfers",
+        )
+
+    def add_dest(self) -> None:
+        self.add_argument("--dest", required=True, type=self.extant_path)
+
+
+def find_category_of_carrier_files(
+    carrier_files: dict, acq_id: str, source_dir: Path, exts: list, category: str
+) -> dict:
+    for path in source_dir.iterdir():
+        if not path.suffix in exts:
+            continue
+        carrier_id_match = re.search(rf"{acq_id}_\d\d\d\d\d\d+", path.name)
+        if not carrier_id_match:
+            continue
+        carrier_id = carrier_id_match.group(0)
+
+        if not carrier_id in carrier_files:
+            carrier_files[carrier_id] = {category: []}
+        elif not category in carrier_files[carrier_id]:
+            carrier_files[carrier_id][category] = []
+
+        carrier_files[carrier_id][category].append(path)
+
+    return carrier_files
 
 
 def create_acq_dir(dest: Path, acq_id: str) -> Path:

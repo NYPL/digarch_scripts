@@ -28,7 +28,7 @@ def args(transfer_files):
         str(transfer_files / "rclone.log"),
         "--dest",
         str(transfer_files),
-        "--id",
+        "--acqid",
         "ACQ_1234_123456",
     ]
     return args

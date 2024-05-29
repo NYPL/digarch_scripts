@@ -16,6 +16,13 @@ def transfer_files(tmp_path: Path, request):
 
 
 @pytest.fixture
+def image_files(tmp_path: Path, request):
+    fixture_data = Path(request.module.__file__).parent / "fixtures" / "image"
+    shutil.copytree(fixture_data, tmp_path, dirs_exist_ok=True)
+    return tmp_path
+
+
+@pytest.fixture
 def payload(transfer_files):
     return transfer_files / "rclone_files"
 
@@ -48,6 +55,42 @@ CREATE_DIR = [
     (pb.create_acq_dir, "ACQ_1234"),
     (pb.create_package_dir, "ACQ_1234_123456"),
 ]
+
+
+def test_file_found(image_files):
+    acq_id = "ACQ_1234"
+
+    carrier_files = {}
+    carrier_files = pb.find_category_of_carrier_files(
+        carrier_files, acq_id, image_files / "images", [".img"], "images"
+    )
+
+    assert (
+        image_files / "images" / "ACQ_1234_123456.img"
+        in carrier_files[f"{acq_id}_123456"]["images"]
+    )
+
+
+def test_ignore_unknown_extension_for_category(image_files):
+    acq_id = "ACQ_1234"
+
+    carrier_files = {}
+    carrier_files = pb.find_category_of_carrier_files(
+        carrier_files, acq_id, image_files / "images", [".001"], "images"
+    )
+
+    assert f"{acq_id}_123456" not in carrier_files
+
+
+def test_multiple_files_found(image_files):
+    acq_id = "ACQ_1234"
+
+    carrier_files = {}
+    carrier_files = pb.find_category_of_carrier_files(
+        carrier_files, acq_id, image_files / "logs", [".log"], "logs"
+    )
+
+    assert len(carrier_files[f"{acq_id}_123456"]["logs"]) == 2
 
 
 @pytest.mark.parametrize("tested_function,id", CREATE_DIR)
