@@ -236,31 +236,40 @@ def test_generate_valid_oxum(transfer_files: Path):
     assert total_files == 12
 
 
-def test_validate_valid_bag(transfer_files: Path, caplog):
+VALIDATE_BAGS = [
+    (pb.validate_objects_bag, "objects"),
+    (pb.validate_images_bag, "images"),
+    (pb.validate_streams_bag, "streams"),
+]
+
+
+@pytest.mark.parametrize("test_function,type", VALIDATE_BAGS)
+def test_validate_valid_bag(transfer_files: Path, test_function, type: str, caplog):
     """Test the log message"""
 
     # create tiny bag for testing
-    object_dir = transfer_files / "objects"
-    object_dir.mkdir()
-    (transfer_files / "rclone.md5").rename(object_dir / "rlcone.md5")
-    test_bag = bagit.make_bag(object_dir)
+    sub_dir = transfer_files / type
+    sub_dir.mkdir()
+    (transfer_files / "rclone.md5").rename(sub_dir / "rlcone.md5")
+    test_bag = bagit.make_bag(sub_dir)
 
-    pb.validate_bag_in_payload(transfer_files)
+    test_function(transfer_files)
 
     assert f"{test_bag.path} is valid." in caplog.text
 
 
-def test_validate_invalid_bag(transfer_files, caplog):
+@pytest.mark.parametrize("test_function,type", VALIDATE_BAGS)
+def test_validate_invalid_bag(transfer_files, test_function, type: str, caplog):
     """Test the log message if the bag isn't valid for some reason"""
 
-    object_dir = transfer_files / "objects"
-    object_dir.mkdir()
-    (transfer_files / "rclone.md5").rename(object_dir / "rlcone.md5")
+    sub_dir = transfer_files / type
+    sub_dir.mkdir()
+    (transfer_files / "rclone.md5").rename(sub_dir / "rlcone.md5")
 
-    test_bag = bagit.make_bag(object_dir)
+    test_bag = bagit.make_bag(sub_dir)
     print(list(Path(test_bag.path).iterdir()))
     (Path(test_bag.path) / "bag-info.txt").unlink()
-    pb.validate_bag_in_payload(transfer_files)
+    test_function(transfer_files)
 
     assert (
         f"{test_bag.path} is not valid. Check the bag manifest and oxum." in caplog.text

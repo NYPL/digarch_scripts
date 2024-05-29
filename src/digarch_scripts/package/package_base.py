@@ -202,12 +202,30 @@ def get_oxum(payload_dir: Path) -> tuple[int, int]:
     return total_bytes, total_files
 
 
-def validate_bag_in_payload(pkg_dir: Path) -> None:
-    bag_dir = pkg_dir / "objects"
+def validate_bag(pkg_dir: Path, subfolder: str) -> None:
+    bag_dir = pkg_dir / subfolder
     bag = bagit.Bag(str(bag_dir))
     try:
         bag.validate(completeness_only=True)
         LOGGER.info(f"{bag.path} is valid.")
     except bagit.BagValidationError:
         LOGGER.warning(f"{bag.path} is not valid. Check the bag manifest and oxum.")
+    return None
+
+
+def validate_objects_bag(pkg_dir: Path) -> None:
+    validate_bag(pkg_dir, "objects")
+
+    return None
+
+
+def validate_images_bag(pkg_dir: Path) -> None:
+    validate_bag(pkg_dir, "images")
+
+    return None
+
+
+def validate_streams_bag(pkg_dir: Path) -> None:
+    validate_bag(pkg_dir, "streams")
+
     return None
