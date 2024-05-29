@@ -214,8 +214,8 @@ def create_bag_in_streams(stream_path: Path, pkg_dir: Path) -> None:
     return None
 
 
-def create_bag_in_objects(objects_path: Path, md5_path: Path, pkg_dir: Path) -> None:
-    create_bag_in_dir([objects_path], pkg_dir, "objects", md5_path, "rclone")
+def create_bag_in_objects(objects_path: Path, pkg_dir: Path, manifest_source: Path = None, manifest_type: str = None) -> None:
+    create_bag_in_dir([objects_path], pkg_dir, "objects", manifest_source, manifest_type)
 
     return None
 
