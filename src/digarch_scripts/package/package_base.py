@@ -210,6 +210,8 @@ def create_bag_in_dir(
 
     if source == "rclone":
         convert_rclone_md5_to_bagit_manifest(manifest_source, bag_dir)
+    elif source == "rsync":
+        convert_rsync_log_to_bagit_manifest(manifest_source, bag_dir)
     else:
         create_bagit_manifest(paths, bag_dir)
 
@@ -271,6 +273,30 @@ def convert_rclone_md5_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
         f.writelines(updated_manifest)
     # move md5 file to manifest-md5.txt in bag
     md5_path.rename(new_md5_path)
+
+    return None
+
+
+def convert_rsync_log_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
+    # check for manifest
+    new_md5_path = bag_dir / "manifest-md5.txt"
+    if new_md5_path.exists():
+        raise FileExistsError("manifest-md5.txt already exists, review package")
+
+    with open(md5_path, "r") as f:
+        log_data = f.readlines()
+
+    manifest_data = []
+    prefix = os.path.commonprefix([os.path.dirname(line.split(',')[1]) for line in log_data if len(line.split(',')) > 1])
+    print(prefix)
+    for line in log_data:
+        parts = line.split(',')
+        if len(parts) == 4:
+            poss_rel_path = parts[1].replace(prefix, 'data')
+            manifest_data.append(f"{parts[3].strip()}  {poss_rel_path}\n")
+    # re-writes the manifest lines
+    with open(new_md5_path, "w") as f:
+        f.writelines(manifest_data)
 
     return None
 

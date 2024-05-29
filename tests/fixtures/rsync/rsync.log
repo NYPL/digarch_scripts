@@ -1,0 +1,4 @@
+2024/05/29 15:07:45 [46235] building file list
+2024/05/29 15:07:45 [46235] , tests/fixtures/rsync/rsync_files/file.01, 3072, d5116a5a40aab468780a3c03b417a8ac
+2024/05/29 15:07:45 [46235] , tests/fixtures/rsync/rsync_files/file.02, 3072, 379bc3d1e529f9645bab5482bbd4ac98
+2024/05/29 15:07:45 [46235] sent 3206 bytes  received 41 bytes  total size 3072
