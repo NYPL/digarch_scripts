@@ -74,7 +74,7 @@ def move_file(file_path: Path, pkg_dir: Path, dest: str) -> None:
         raise FileExistsError(
             f"{new_file_path} already exists in {dest} folder. Not moving."
         )
-    print(new_file_path)
+
     file_path.rename(new_file_path)
     return None
 
@@ -102,30 +102,48 @@ def move_data_files(data_paths: list[Path], pkg_dir: Path) -> None:
     return move_files(data_paths, pkg_dir, "data")
 
 
-def move_and_bag_diskimage_files(image_paths: list[Path], pkg_dir: Path) -> None:
-    bag_dir = pkg_dir / "images"
-    if not bag_dir.exists():
-        bag_dir.mkdir()
-    create_bagit_manifest(image_paths, bag_dir)
-    move_data_files(image_paths, bag_dir)
+def create_bag_in_dir(
+    paths: list[Path],
+    pkg_dir: Path,
+    type: str,
+    manifest_source: Path = None,
+    source: str = None,
+) -> None:
+    bag_dir = pkg_dir / type
+    bag_dir.mkdir()
+
+    if len(paths) == 1 and paths[0].is_dir():
+        paths = list(paths[0].iterdir())
+
+    if source == "rclone":
+        convert_rclone_md5_to_bagit_manifest(manifest_source, bag_dir)
+    else:
+        create_bagit_manifest(paths, bag_dir)
+
+    move_data_files(paths, bag_dir)
     create_bag_tag_files(bag_dir)
+
+
+def create_bag_in_images(image_paths: list[Path], pkg_dir: Path) -> None:
+    create_bag_in_dir(image_paths, pkg_dir, "images")
 
     return None
 
 
-def move_and_bag_stream_files(stream_path: list[Path], pkg_dir: Path) -> None:
-    bag_dir = pkg_dir / "streams"
-    if not bag_dir.exists():
-        bag_dir.mkdir()
-    stream_paths = list(stream_path[0].iterdir())
-    create_bagit_manifest(stream_paths, bag_dir)
-    move_data_files(stream_paths, bag_dir)
-    create_bag_tag_files(bag_dir)
+def create_bag_in_streams(stream_path: list[Path], pkg_dir: Path) -> None:
+    create_bag_in_dir([stream_path], pkg_dir, "streams")
+
+    return None
+
+
+def create_bag_in_objects(objects_path: Path, md5_path: Path, pkg_dir: Path) -> None:
+    create_bag_in_dir([objects_path], pkg_dir, "objects", md5_path, "rclone")
 
     return None
 
 
 def create_bagit_manifest(paths: list[Path], bag_dir: Path) -> None:
+    # paths must be files
     manifest_lines = []
     for path in paths:
         md5_hash = bagit.generate_manifest_lines(str(path), ["md5"])[0][1]
@@ -134,37 +152,6 @@ def create_bagit_manifest(paths: list[Path], bag_dir: Path) -> None:
     with open(bag_dir / "manifest-md5.txt", "w") as f:
         for line in manifest_lines:
             f.write(f"{line[0]}  {line[1]}")
-
-    return None
-
-
-def create_bag_in_objects(payload_path: Path, md5_path: Path, pkg_dir: Path) -> None:
-    bag_dir = pkg_dir / "objects"
-    bag_dir.mkdir()
-    move_payload(payload_path, bag_dir)
-    convert_rclone_md5_to_bagit_manifest(md5_path, bag_dir)
-    # generate baginfo.txt and bagit.txt (copying code snippet from bagit)
-    create_bag_tag_files(bag_dir)
-
-    return None
-
-
-def move_payload(payload_path: Path, bag_dir: Path) -> None:
-    # instantiate a var for objects dir
-    payload_dir = bag_dir / "data"
-    # if the object folder does not exist create it
-    if not payload_dir.exists():
-        payload_dir.mkdir(parents=True)
-    else:
-        raise FileExistsError(f"{payload_dir} already exists. Not moving files.")
-
-    for a_file in payload_path.iterdir():
-        new_ob_path = payload_dir / a_file.name
-        # if a payload file is already in the object directory do not move, raise error
-        if new_ob_path.exists():
-            raise FileExistsError(f"{new_ob_path} already exists. Not moving.")
-
-        a_file.rename(new_ob_path)
 
     return None
 

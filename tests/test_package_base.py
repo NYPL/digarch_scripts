@@ -158,7 +158,7 @@ def test_move_multiple_file(
     package_base_dir: Path, log: Path, md5_manifest: Path, test_function, dest: str
 ):
     """Test that multiple files are moved successfully"""
-    parts = dest.split('/')
+    parts = dest.split("/")
 
     md_files = [log, md5_manifest]
     test_function(md_files, package_base_dir)
@@ -190,43 +190,9 @@ def test_partial_halt_multiple_files(
     )
 
 
-def test_move_payload(package_base_dir: Path, payload: Path):
-    """Test that entirety of payload is moved and hierarchy is preserved"""
-
-    source_contents = [file.relative_to(payload) for file in payload.rglob("*")]
-
-    data_path = package_base_dir / "objects" / "data"
-    pb.move_payload(payload, package_base_dir / "objects")
-
-    # check that source is empty
-    assert not any(payload.iterdir())
-
-    assert data_path.exists()
-
-    # compare contents of data and former source
-    data_contents = [file.relative_to(data_path) for file in data_path.rglob("*")]
-    assert source_contents == data_contents
-
-
-def test_do_not_overwrite_payload(package_base_dir: Path, payload: Path):
-    """Test that no payload file is moved if /data exists"""
-
-    source_contents = [file for file in payload.rglob("*")]
-
-    bag_payload = package_base_dir / "objects" / "data"
-    bag_payload.mkdir(parents=True)
-
-    with pytest.raises(FileExistsError) as exc:
-        pb.move_payload(payload, package_base_dir / "objects")
-
-    # check source has not changed
-    assert source_contents == [file for file in payload.rglob("*")]
-    assert f"{bag_payload} already exists. Not moving files." in str(exc.value)
-
-
 @pytest.fixture
 def bag_payload(package_base_dir: Path, payload: Path):
-    pb.move_payload(payload, package_base_dir)
+    pb.move_data_files(list(payload.iterdir()), package_base_dir)
     bag_payload = package_base_dir / "data"
 
     return bag_payload
@@ -244,6 +210,7 @@ def test_convert_rclone_md5(bag_payload: Path, md5_manifest: Path):
     payload_files = [
         str(path.relative_to(bag_payload.parent)) for path in bag_payload.rglob("*")
     ]
+
     for a_file in md5_paths:
         assert a_file in payload_files
 

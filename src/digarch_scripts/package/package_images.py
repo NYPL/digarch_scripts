@@ -129,8 +129,8 @@ def package_carriers(carrier_files: dict, acq_dir: Path) -> None:
         try:
             base_dir = pb.create_package_dir(acq_dir, carrier)
             pb.move_metadata_files(files["logs"], base_dir)
-            pb.move_and_bag_diskimage_files(files["images"], base_dir)
-            pb.move_and_bag_stream_files(files["streams"], base_dir)
+            pb.create_bag_in_images(files["images"], base_dir)
+            pb.create_bag_in_streams(files["streams"], base_dir)
         except:
             LOGGER.error(
                 f"Packaging incomplete for {carrier}. Address warnings manually."
