@@ -187,52 +187,57 @@ def carrier_files(transfer_files):
 
 
 def test_good_validate_carrier(carrier_files, caplog):
-    pi.validate_carrier_files(carrier_files)
+    result = pi.validate_carrier_files(carrier_files)
 
     assert not caplog.text
+    assert result
 
 
 @pytest.mark.parametrize("key", ["images", "logs", "streams"])
 def test_warn_carrier_with_one_missing_category(carrier_files, key, caplog):
     carrier_files["ACQ_1234_123456"].pop(key)
 
-    pi.validate_carrier_files(carrier_files)
+    result = pi.validate_carrier_files(carrier_files)
 
     assert (
         f"The following categories of files were not found for ACQ_1234_123456: {key}"
         in caplog.text
     )
+    assert not result
 
 
 def test_warn_carrier_with_logs_no_images_or_streams(caplog):
     carrier_files = {"ACQ_1234_123456": {"logs": [Path("ACQ_1234_123456.log")]}}
-    pi.validate_carrier_files(carrier_files)
+    result = pi.validate_carrier_files(carrier_files)
 
     assert (
         f"The following categories of files were not found for ACQ_1234_123456: images, streams"
         in caplog.text
     )
+    assert not result
 
 
 def test_warn_carrier_with_streams_no_images_or_logs(caplog):
     carrier_files = {"ACQ_1234_123456": {"streams": [Path("ACQ_1234_123456_streams")]}}
-    pi.validate_carrier_files(carrier_files)
+    result = pi.validate_carrier_files(carrier_files)
 
     assert (
         f"The following categories of files were not found for ACQ_1234_123456: images, logs"
         in caplog.text
     )
+    assert not result
 
 
 def test_warn_and_skip_0_length_image(carrier_files, caplog):
     carrier_files["ACQ_1234_123457"]["images"][0].unlink()
     carrier_files["ACQ_1234_123457"]["images"][0].touch()
-    pi.validate_carrier_files(carrier_files)
+    result = pi.validate_carrier_files(carrier_files)
 
     assert (
         f'The following image file is 0-bytes: {str(carrier_files["ACQ_1234_123457"]["images"][0])}'
         in caplog.text
     )
+    assert not result
 
 
 def test_warn_streams_missing_a_side():
@@ -242,12 +247,13 @@ def test_warn_streams_missing_a_side():
 
 def test_warn_only_one_stream_folder_allowed(carrier_files, caplog):
     carrier_files["ACQ_1234_123457"]["streams"].append("ACQ_1234_123457_2")
-    pi.validate_carrier_files(carrier_files)
+    result = pi.validate_carrier_files(carrier_files)
 
     assert (
         f"Multiple folder of stream folders found for ACQ_1234_123457. Only 1 allowed"
         in caplog.text
     )
+    assert not result
 
 
 def test_good_packaging(carrier_files, tmp_path: Path):
@@ -255,9 +261,6 @@ def test_good_packaging(carrier_files, tmp_path: Path):
 
     for carrier in carrier_files:
         assert carrier in [x.name for x in (tmp_path / "ACQ_1234").iterdir()]
-
-
-# TODO add packaging fails
 
 
 def test_full_run(

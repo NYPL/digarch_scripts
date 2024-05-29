@@ -97,9 +97,11 @@ def find_carrier_files(
     return carrier_files
 
 
-def validate_carrier_files(carrier_files):
+def validate_carrier_files(carrier_files: dict) -> bool:
+    result = True
     for carrier_name in carrier_files:
         carrier = carrier_files[carrier_name]
+
         missing = []
         for key in ["images", "logs", "streams"]:
             if not key in carrier.keys():
@@ -109,19 +111,22 @@ def validate_carrier_files(carrier_files):
             LOGGER.warning(
                 f'The following categories of files were not found for {carrier_name}: {", ".join(missing)} '
             )
+            result = False
 
         if "images" in carrier:
             for image_file in carrier["images"]:
                 if image_file.stat().st_size == 0:
                     LOGGER.warning(f"The following image file is 0-bytes: {image_file}")
+                    result = False
 
         if "streams" in carrier:
             if not len(carrier["streams"]) == 1:
                 LOGGER.warning(
                     f'Multiple folder of stream folders found for {carrier_name}. Only 1 allowed: {carrier["streams"]}'
                 )
+                result = False
 
-    return
+    return result
 
 
 def package_carriers(carrier_files: dict, acq_dir: Path) -> None:
@@ -130,11 +135,16 @@ def package_carriers(carrier_files: dict, acq_dir: Path) -> None:
             base_dir = pb.create_package_dir(acq_dir, carrier)
             pb.move_metadata_files(files["logs"], base_dir)
             pb.create_bag_in_images(files["images"], base_dir)
-            pb.create_bag_in_streams(files["streams"], base_dir)
+            pb.create_bag_in_streams(files["streams"][0], base_dir)
         except:
             LOGGER.error(
                 f"Packaging incomplete for {carrier}. Address warnings manually."
             )
+        finally:
+            pb.validate_images_bag(base_dir)
+            pb.validate_streams_bag(base_dir)
+
+    return None
 
 
 def main():
@@ -143,6 +153,7 @@ def main():
     carrier_files = find_carrier_files(
         args.acqid, args.images_folder, args.logs_folder, args.streams_folder
     )
+
     if validate_carrier_files(carrier_files):
         package_carriers(carrier_files, args.dest)
     else:
