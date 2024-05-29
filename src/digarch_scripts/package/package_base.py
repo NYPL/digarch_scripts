@@ -28,9 +28,24 @@ class TransferParser(argparse.ArgumentParser):
                 )
         return id
 
+    def carrier_id(self, id: str) -> Path:
+        pattern = r"ACQ_\d{4}_\d{6,7}"
+        old_pattern = r"M\d{4-6}_\d{6,7}"
+        if not re.match(pattern, id):
+            if not re.match(old_pattern, id):
+                raise argparse.ArgumentTypeError(
+                    f"{id} does not match the expected {type} pattern, {pattern}"
+                )
+        return id
+
     def add_acqid(self) -> None:
         self.add_argument(
             "--acqid", "--id", required=True, type=self.acq_id, help="ACQ_####"
+        )
+
+    def add_carrierid(self) -> None:
+        self.add_argument(
+            "--carrierid", required=True, type=self.carrier_id, help="ACQ_####_#######"
         )
 
     def add_payload(self) -> None:
@@ -214,8 +229,15 @@ def create_bag_in_streams(stream_path: Path, pkg_dir: Path) -> None:
     return None
 
 
-def create_bag_in_objects(objects_path: Path, pkg_dir: Path, manifest_source: Path = None, manifest_type: str = None) -> None:
-    create_bag_in_dir([objects_path], pkg_dir, "objects", manifest_source, manifest_type)
+def create_bag_in_objects(
+    objects_path: Path,
+    pkg_dir: Path,
+    manifest_source: Path = None,
+    manifest_type: str = None,
+) -> None:
+    create_bag_in_dir(
+        [objects_path], pkg_dir, "objects", manifest_source, manifest_type
+    )
 
     return None
 

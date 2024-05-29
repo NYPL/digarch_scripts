@@ -14,8 +14,10 @@ LOGGER.setLevel(logging.INFO)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = pb.TransferParser(description="Create package for single cloud-based file-transfer.")
-    parser.add_acqid()
+    parser = pb.TransferParser(
+        description="Create package for single cloud-based file-transfer."
+    )
+    parser.add_carrierid()
     parser.add_payload()
     parser.add_log()
     parser.add_md5()
@@ -27,9 +29,9 @@ def parse_args() -> argparse.Namespace:
 def main():
     args = parse_args()
 
-    base_dir = pb.create_package_dir(args.dest, args.acqid)
+    base_dir = pb.create_package_dir(args.dest, args.carrierid)
     pb.move_metadata_file(args.log, base_dir)
-    pb.create_bag_in_objects(args.payload, args.md5, base_dir)
+    pb.create_bag_in_objects(args.payload, base_dir, args.md5, "rclone")
     pb.validate_objects_bag(base_dir)
 
 

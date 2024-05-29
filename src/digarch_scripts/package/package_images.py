@@ -14,7 +14,9 @@ STREAM_EXTS = [""]
 
 
 def parse_args() -> argparse.Namespace:
-    parser = pb.TransferParser(description="Create packages for all disk imaging files for a single acquisition.")
+    parser = pb.TransferParser(
+        description="Create packages for all disk imaging files for a single acquisition."
+    )
     parser.add_acqid()
     parser.add_images_folder()
     parser.add_logs_folder()
