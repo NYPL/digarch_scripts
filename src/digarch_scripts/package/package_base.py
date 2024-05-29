@@ -130,7 +130,7 @@ def create_bag_in_images(image_paths: list[Path], pkg_dir: Path) -> None:
     return None
 
 
-def create_bag_in_streams(stream_path: list[Path], pkg_dir: Path) -> None:
+def create_bag_in_streams(stream_path: Path, pkg_dir: Path) -> None:
     create_bag_in_dir([stream_path], pkg_dir, "streams")
 
     return None
