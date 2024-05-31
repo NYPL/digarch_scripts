@@ -1,4 +1,5 @@
-2024/05/29 15:07:45 [46235] building file list
-2024/05/29 15:07:45 [46235] , tests/fixtures/rsync/rsync_files/file.01, 3072, d5116a5a40aab468780a3c03b417a8ac
-2024/05/29 15:07:45 [46235] , tests/fixtures/rsync/rsync_files/file.02, 3072, 379bc3d1e529f9645bab5482bbd4ac98
-2024/05/29 15:07:45 [46235] sent 3206 bytes  received 41 bytes  total size 3072
+2024/05/30 16:20:36 [59347] building file list
+2024/05/30 16:20:36 [59347] , 3072, d5116a5a40aab468780a3c03b417a8ac, Users/fortitude/dev/digarch-scripts-poetry/tests/fixtures/rsync/rsync_files/file.01
+2024/05/30 16:20:36 [59347] , 96,                                 , Users/fortitude/dev/digarch-scripts-poetry/tests/fixtures/rsync/rsync_files/folder
+2024/05/30 16:20:36 [59347] , 7168, 379bc3d1e529f9645bab5482bbd4ac98, Users/fortitude/dev/digarch-scripts-poetry/tests/fixtures/rsync/rsync_files/folder/file.02
+2024/05/30 16:20:37 [59347] sent 10516 bytes  received 75 bytes  total size 10240
