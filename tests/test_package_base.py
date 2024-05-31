@@ -16,6 +16,21 @@ def transfer_files(tmp_path: Path, request):
 
 
 @pytest.fixture
+def rclone_payload(transfer_files):
+    return transfer_files / "rclone_files"
+
+
+@pytest.fixture
+def rclone_md5_manifest(transfer_files):
+    return transfer_files / "rclone.md5"
+
+
+@pytest.fixture
+def rclone_log(transfer_files):
+    return transfer_files / "rclone.log"
+
+
+@pytest.fixture
 def image_files(tmp_path: Path, request):
     fixture_data = Path(request.module.__file__).parent / "fixtures" / "image"
     shutil.copytree(fixture_data, tmp_path, dirs_exist_ok=True)
@@ -23,22 +38,24 @@ def image_files(tmp_path: Path, request):
 
 
 @pytest.fixture
-def payload(transfer_files):
-    return transfer_files / "rclone_files"
+def rsync_files(tmp_path: Path, request):
+    fixture_data = Path(request.module.__file__).parent / "fixtures" / "rsync"
+    shutil.copytree(fixture_data, tmp_path, dirs_exist_ok=True)
+    return tmp_path
 
 
 @pytest.fixture
-def md5_manifest(transfer_files):
-    return transfer_files / "rclone.md5"
+def rsync_payload(rsync_files):
+    return rsync_files / "rsync_files"
 
 
 @pytest.fixture
-def log(transfer_files):
-    return transfer_files / "rclone.log"
+def rsync_log(rsync_files):
+    return rsync_files / "rsync.log"
 
 
 @pytest.fixture
-def id():
+def acqid():
     return "ACQ_1234_123456"
 
 
@@ -118,33 +135,33 @@ def test_create_acq_dir(tmp_path: Path):
     assert base_dir.parent.name == tmp_path.name
 
 
-def test_create_pkg_dir(tmp_path: Path, id: str):
+def test_create_pkg_dir(tmp_path: Path, acqid: str):
     """Test that package folder maker makes ACQ and Carrier folders"""
 
-    base_dir = pb.create_package_dir(tmp_path, id)
+    base_dir = pb.create_package_dir(tmp_path, acqid)
 
-    assert base_dir.name == id
-    assert base_dir.parent.name == id[:-7]
+    assert base_dir.name == acqid
+    assert base_dir.parent.name == acqid[:-7]
 
 
-def test_create_package_basedir_with_existing_acq_dir(tmp_path: Path, id: str):
+def test_create_package_basedir_with_existing_acq_dir(tmp_path: Path, acqid: str):
     """Test that package folder maker respect existing ACQ folder"""
 
-    (tmp_path / id[:-7]).mkdir()
-    base_dir = pb.create_package_dir(tmp_path, id)
+    (tmp_path / acqid[:-7]).mkdir()
+    base_dir = pb.create_package_dir(tmp_path, acqid)
 
-    assert base_dir.name == id
-    assert base_dir.parent.name == id[:-7]
+    assert base_dir.name == acqid
+    assert base_dir.parent.name == acqid[:-7]
 
 
-def test_error_on_existing_package_dir(tmp_path: Path, id: str):
+def test_error_on_existing_package_dir(tmp_path: Path, acqid: str):
     """Test that package folder maker errors if carrier folder exists"""
 
-    base_dir = tmp_path / id[:-7] / id
+    base_dir = tmp_path / acqid[:-7] / acqid
     base_dir.mkdir(parents=True)
 
     with pytest.raises(FileExistsError) as exc:
-        pb.create_package_dir(tmp_path, id)
+        pb.create_package_dir(tmp_path, acqid)
 
     assert f"{base_dir} already exists. Make sure you are using the correct ID" in str(
         exc.value
@@ -152,8 +169,8 @@ def test_error_on_existing_package_dir(tmp_path: Path, id: str):
 
 
 @pytest.fixture
-def package_base_dir(tmp_path: Path, id: str):
-    return pb.create_package_dir(tmp_path, id)
+def package_base_dir(tmp_path: Path, acqid: str):
+    return pb.create_package_dir(tmp_path, acqid)
 
 
 MOVE_FILE = [
@@ -162,29 +179,29 @@ MOVE_FILE = [
 
 
 @pytest.mark.parametrize("test_function,dest", MOVE_FILE)
-def test_move_file(package_base_dir: Path, log: Path, test_function, dest: str):
+def test_move_file(package_base_dir: Path, rclone_log: Path, test_function, dest: str):
     """Test that metadata folder and log file are moved successfully"""
 
-    test_function(log, package_base_dir)
+    test_function(rclone_log, package_base_dir)
 
-    assert not log.exists()
+    assert not rclone_log.exists()
     assert (package_base_dir / dest / "rclone.log").exists()
 
 
 @pytest.mark.parametrize("test_function,dest", MOVE_FILE)
 def test_do_not_overwrite_file(
-    package_base_dir: Path, log: Path, test_function, dest: str
+    package_base_dir: Path, rclone_log: Path, test_function, dest: str
 ):
     """Test that log file is not moved if a same name file exists in dest"""
 
-    rclone_log = package_base_dir / dest / log.name
+    rclone_log = package_base_dir / dest / rclone_log.name
     rclone_log.parent.mkdir()
     rclone_log.touch()
 
     with pytest.raises(FileExistsError) as exc:
-        test_function(log, package_base_dir)
+        test_function(rclone_log, package_base_dir)
 
-    assert log.exists()
+    assert rclone_log.exists()
     assert f"{rclone_log} already exists in {dest} folder. Not moving." in str(
         exc.value
     )
@@ -198,12 +215,12 @@ MOVE_FILES = [
 
 @pytest.mark.parametrize("test_function,dest", MOVE_FILES)
 def test_move_multiple_file(
-    package_base_dir: Path, log: Path, md5_manifest: Path, test_function, dest: str
+    package_base_dir: Path, rclone_log: Path, rclone_md5_manifest: Path, test_function, dest: str
 ):
     """Test that multiple files are moved successfully"""
     parts = dest.split("/")
 
-    md_files = [log, md5_manifest]
+    md_files = [rclone_log, rclone_md5_manifest]
     test_function(md_files, package_base_dir)
 
     for md_file in md_files:
@@ -213,20 +230,20 @@ def test_move_multiple_file(
 
 @pytest.mark.parametrize("test_function,dest", MOVE_FILES)
 def test_partial_halt_multiple_files(
-    package_base_dir: Path, log: Path, md5_manifest: Path, test_function, dest: str
+    package_base_dir: Path, rclone_log: Path, rclone_md5_manifest: Path, test_function, dest: str
 ):
     """Test that warning is issued for multiple move if a single metadata move fails"""
 
-    rclone_log = package_base_dir / dest / log.name
+    rclone_log = package_base_dir / dest / rclone_log.name
     rclone_log.parent.mkdir()
     rclone_log.touch()
 
-    md_files = [log, md5_manifest]
+    md_files = [rclone_log, rclone_md5_manifest]
 
     with pytest.raises(Warning) as exc:
         test_function(md_files, package_base_dir)
 
-    assert log.exists()
+    assert rclone_log.exists()
     assert (
         f"already exists in {dest} folder. Not moving. One or more files may have already been moved to the {dest} folder"
         in str(exc.value)
@@ -234,15 +251,15 @@ def test_partial_halt_multiple_files(
 
 
 @pytest.fixture
-def bag_payload(package_base_dir: Path, payload: Path):
-    pb.move_data_files(list(payload.iterdir()), package_base_dir)
+def bag_payload(package_base_dir: Path, rclone_payload: Path):
+    pb.move_data_files(list(rclone_payload.iterdir()), package_base_dir)
     bag_payload = package_base_dir / "data"
 
     return bag_payload
 
 
-def test_convert_rclone_md5(bag_payload: Path, md5_manifest: Path):
-    pb.convert_rclone_md5_to_bagit_manifest(md5_manifest, bag_payload.parent)
+def test_convert_rclone_md5(bag_payload: Path, rclone_md5_manifest: Path):
+    pb.convert_rclone_md5_to_bagit_manifest(rclone_md5_manifest, bag_payload.parent)
     bag_md5 = bag_payload.parent / "manifest-md5.txt"
 
     # Get path to correct payload in data
@@ -258,13 +275,67 @@ def test_convert_rclone_md5(bag_payload: Path, md5_manifest: Path):
         assert a_file in payload_files
 
 
-def test_create_bag(package_base_dir: Path, payload: Path, md5_manifest: Path):
+@pytest.fixture
+def rsync_bag_payload(package_base_dir: Path, rsync_payload: Path):
+    pb.move_data_files(list(rsync_payload.iterdir()), package_base_dir)
+    bag_payload = package_base_dir / "data"
+
+    return bag_payload
+
+
+def test_convert_rsync_log(rsync_bag_payload: Path, rsync_log: Path, rsync_files):
+    pb.convert_rsync_log_to_bagit_manifest(rsync_log, rsync_bag_payload.parent)
+    bag_md5 = rsync_bag_payload.parent / "manifest-md5.txt"
+
+    # Get path to correct payload in data
+    # read md5 and extract filepaths
+    with open(bag_md5) as m:
+        md5_paths = [line.strip().split("  ")[-1] for line in m.readlines()]
+
+    payload_files = [
+        str(path.relative_to(rsync_bag_payload.parent)) for path in rsync_bag_payload.rglob("*")
+    ]
+
+    for a_file in md5_paths:
+        assert a_file in payload_files
+
+
+def test_convert_rsync_log_replaces_prefix_with_data(rsync_bag_payload: Path, rsync_log: Path):
+    prefix = "/Users/fortitude/dev/digarch-scripts-poetry/tests/fixtures/rsync/rsync_files"
+    pb.convert_rsync_log_to_bagit_manifest(rsync_log, rsync_bag_payload.parent, prefix)
+    bag_md5 = rsync_bag_payload.parent / "manifest-md5.txt"
+
+    #extract paths from manifest
+    with open(bag_md5) as m:
+        md5_paths = [line.strip().split("  ")[-1] for line in m.readlines()]
+
+    #extract paths from log
+    rsync_paths = []
+    with open(rsync_log) as m:
+        lines = m.readlines()
+        for line in lines:
+            parts = line.strip().split(", ")
+            if len(parts) > 3 and parts[2].strip():
+                rsync_paths.append(line.strip().split(", ")[-1].replace(prefix[1:], 'data'))
+
+    #assert difference
+    assert set(md5_paths) == set(rsync_paths)
+
+
+def test_convert_rsync_log_requires_specific_format(rsync_bag_payload: Path, rsync_log: Path, caplog):
+    rsync_log.write_text('time, size, not a hash, good/path')
+    pb.convert_rsync_log_to_bagit_manifest(rsync_log, rsync_bag_payload.parent)
+
+    assert f"{str(rsync_log)} should be formatted with md5 hash in the 3rd comma-separated fields" in caplog.text
+
+
+def test_create_bag(package_base_dir: Path, rclone_payload: Path, rclone_md5_manifest: Path):
     """Test that all tag files are created and rclone md5sums are correctly converted"""
 
     bag_path = package_base_dir / "objects"
 
     # might need further testing of the oxum and manifest converter functions
-    pb.create_bag_in_objects(payload, md5_manifest, package_base_dir)
+    pb.create_bag_in_objects(rclone_payload, package_base_dir, rclone_md5_manifest, 'rclone')
 
     assert bagit.Bag(str(bag_path)).validate(completeness_only=True)
 

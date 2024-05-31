@@ -48,6 +48,14 @@ class TransferParser(argparse.ArgumentParser):
             "--carrierid", required=True, type=self.carrier_id, help="ACQ_####_#######"
         )
 
+    def add_source(self) -> None:
+        self.add_argument(
+            "--source",
+            required=True,
+            type=self.extant_path,
+            help="Path to mount carrier",
+        )
+
     def add_payload(self) -> None:
         self.add_argument(
             "--payload",
@@ -106,6 +114,9 @@ class TransferParser(argparse.ArgumentParser):
 
     def add_dest(self) -> None:
         self.add_argument("--dest", required=True, type=self.extant_path)
+
+    def add_quiet(self, **kwargs) -> None:
+        self.add_argument("-q", "--quiet", action='store_true', **kwargs)
 
 
 def find_category_of_carrier_files(
@@ -277,24 +288,45 @@ def convert_rclone_md5_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
     return None
 
 
-def convert_rsync_log_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
+def convert_rsync_log_to_bagit_manifest(rsync_log: Path, bag_dir: Path, prefix: Path = None) -> None:
     # check for manifest
     new_md5_path = bag_dir / "manifest-md5.txt"
     if new_md5_path.exists():
         raise FileExistsError("manifest-md5.txt already exists, review package")
 
-    with open(md5_path, "r") as f:
+    with open(rsync_log, "r") as f:
         log_data = f.readlines()
 
+    if not prefix:
+        prefix = os.path.commonprefix(
+            [
+                os.path.dirname(line.split(",", 4)[3])
+                for line in log_data
+                if len(line.split(",")) > 1
+            ]
+        )
+    else:
+        prefix = str(prefix)
+
     manifest_data = []
-    prefix = os.path.commonprefix([os.path.dirname(line.split(',')[1]) for line in log_data if len(line.split(',')) > 1])
-    print(prefix)
+
     for line in log_data:
-        parts = line.split(',')
-        if len(parts) == 4:
-            poss_rel_path = parts[1].replace(prefix, 'data')
-            manifest_data.append(f"{parts[3].strip()}  {poss_rel_path}\n")
-    # re-writes the manifest lines
+        parts = line.strip().split(",", 3)
+        if not len(parts) == 4:
+            continue
+
+        poss_rel_path = parts[3].strip().replace(prefix[1:], "data")
+
+        poss_md5_hash = parts[2].strip().lower()
+        if not poss_md5_hash:
+            continue
+        elif not re.match(r"[0-9a-f]{32}", poss_md5_hash):
+            LOGGER.warning(f"{str(rsync_log)} shold be formatted with md5 hash in the 3rd comma-separated fields. Skipping this line: {line}")
+            continue
+
+        manifest_data.append(f"{poss_md5_hash}  {poss_rel_path}\n")
+
+    # write the manifest lines
     with open(new_md5_path, "w") as f:
         f.writelines(manifest_data)
 
@@ -307,6 +339,7 @@ def create_bag_tag_files(bag_dir: Path) -> None:
         bagit_file.write(txt)
 
     bag_info = {}
+    bag_info["ACQ-Object-ID"] = bag_dir.parent.name
     bag_info["Bagging-Date"] = date.strftime(date.today(), "%Y-%m-%d")
     bag_info["Bag-Software-Agent"] = "digarch_scripts"
     total_bytes, total_files = get_oxum(bag_dir / "data")
