@@ -17,6 +17,7 @@ report_hdd_extents = 'digarch_scripts.report.report_hdd_extents:main'
 package_cloud = 'digarch_scripts.package.package_cloud:main'
 package_images = 'digarch_scripts.package.package_images:main'
 package_filetransfer = 'digarch_scripts.package.package_filetransfer:main'
+transfer_rsync = 'digarch_scripts.transfer.transfer_rsync:main'
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2023.4.22"
