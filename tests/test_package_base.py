@@ -326,7 +326,7 @@ def test_convert_rsync_log_requires_specific_format(rsync_bag_payload: Path, rsy
     rsync_log.write_text('time, size, not a hash, good/path')
     pb.convert_rsync_log_to_bagit_manifest(rsync_log, rsync_bag_payload.parent)
 
-    assert f"{str(rsync_log)} should be formatted with md5 hash in the 3rd comma-separated fields" in caplog.text
+    assert f"{str(rsync_log.name)} should be formatted with md5 hash in the 3rd comma-separated fields" in caplog.text
 
 
 def test_create_bag(package_base_dir: Path, rclone_payload: Path, rclone_md5_manifest: Path):

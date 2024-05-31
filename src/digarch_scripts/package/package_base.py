@@ -321,7 +321,7 @@ def convert_rsync_log_to_bagit_manifest(rsync_log: Path, bag_dir: Path, prefix: 
         if not poss_md5_hash:
             continue
         elif not re.match(r"[0-9a-f]{32}", poss_md5_hash):
-            LOGGER.warning(f"{str(rsync_log)} shold be formatted with md5 hash in the 3rd comma-separated fields. Skipping this line: {line}")
+            LOGGER.warning(f"{str(rsync_log.name)} should be formatted with md5 hash in the 3rd comma-separated fields. Skipping this line: {line}")
             continue
 
         manifest_data.append(f"{poss_md5_hash}  {poss_rel_path}\n")
