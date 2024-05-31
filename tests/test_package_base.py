@@ -329,7 +329,7 @@ def test_convert_rsync_log_requires_specific_format(rsync_bag_payload: Path, rsy
     assert f"{str(rsync_log.name)} should be formatted with md5 hash in the 3rd comma-separated fields" in caplog.text
 
 
-def test_create_bag(package_base_dir: Path, rclone_payload: Path, rclone_md5_manifest: Path):
+def test_create_objects_bag(package_base_dir: Path, rclone_payload: Path, rclone_md5_manifest: Path):
     """Test that all tag files are created and rclone md5sums are correctly converted"""
 
     bag_path = package_base_dir / "objects"
@@ -338,6 +338,20 @@ def test_create_bag(package_base_dir: Path, rclone_payload: Path, rclone_md5_man
     pb.create_bag_in_objects(rclone_payload, package_base_dir, rclone_md5_manifest, 'rclone')
 
     assert bagit.Bag(str(bag_path)).validate(completeness_only=True)
+    assert not rclone_payload.exists()
+
+
+def test_create_streams_bag(package_base_dir: Path, image_files: Path):
+    """Test that all tag files are created and rclone md5sums are correctly converted"""
+
+    streams_path = image_files / "streams" / "ACQ_1234_123456"
+    bag_path = package_base_dir / "streams"
+
+    # might need further testing of the oxum and manifest converter functions
+    pb.create_bag_in_streams(streams_path, package_base_dir)
+
+    assert bagit.Bag(str(bag_path)).validate(completeness_only=True)
+    assert not streams_path.exists()
 
 
 def test_generate_valid_oxum(transfer_files: Path):

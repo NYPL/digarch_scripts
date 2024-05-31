@@ -238,6 +238,8 @@ def create_bag_in_images(image_paths: list[Path], pkg_dir: Path) -> None:
 
 def create_bag_in_streams(stream_path: Path, pkg_dir: Path) -> None:
     create_bag_in_dir([stream_path], pkg_dir, "streams")
+    if not list(stream_path.iterdir()):
+        stream_path.rmdir()
 
     return None
 
@@ -251,6 +253,8 @@ def create_bag_in_objects(
     create_bag_in_dir(
         [objects_path], pkg_dir, "objects", manifest_source, manifest_type
     )
+    if not list(objects_path.iterdir()):
+       objects_path.rmdir()
 
     return None
 
