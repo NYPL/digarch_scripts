@@ -157,64 +157,106 @@ def test_good_validate_carrier(carrier_files, caplog):
     assert result
 
 
-@pytest.mark.parametrize("key", ["images", "logs", "streams"])
+@pytest.mark.parametrize("key", ["images", "logs"])
 def test_warn_carrier_with_one_missing_category(carrier_files, key, caplog):
     carrier_files["ACQ_1234_123456"].pop(key)
 
     result = pi.validate_carriers_image_files(carrier_files)
 
     assert (
-        f"The following categories of files were not found for ACQ_1234_123456: {key}"
+        f"The following required categories of files were not found for ACQ_1234_123456: {key}"
         in caplog.text
     )
     assert not result
 
 
-def test_warn_carrier_with_logs_no_images_or_streams(caplog):
-    carrier_files = {"ACQ_1234_123456": {"logs": [Path("ACQ_1234_123456.log")]}}
+def test_warn_more_than_one_image(carrier_files, caplog):
+    carrier = "ACQ_1234_123457"
+    second_image = carrier_files[carrier]["images"][0].with_suffix('.img2')
+    second_image.write_text('0')
+    carrier_files[carrier]["images"].append(second_image)
+
     result = pi.validate_carriers_image_files(carrier_files)
 
     assert (
-        f"The following categories of files were not found for ACQ_1234_123456: images, streams"
+        f'Multiple image files found for {carrier}. Only 1 allowed'
         in caplog.text
     )
     assert not result
 
 
-def test_warn_carrier_with_streams_no_images_or_logs(caplog):
-    carrier_files = {"ACQ_1234_123456": {"streams": [Path("ACQ_1234_123456_streams")]}}
+def test_accept_two_sided_images(carrier_files):
+    carrier = "ACQ_1234_123457"
+
+    image_name = carrier_files[carrier]["images"][0].name
+    first_image = carrier_files[carrier]["images"][0].parent / image_name.replace(".img", "s0.001")
+    second_image = carrier_files[carrier]["images"][0].parent / image_name.replace(".img", "s1.001")
+    second_image.write_text('0')
+
+    carrier_files[carrier]["images"][0].rename(first_image)
+    carrier_files[carrier]["images"] = [first_image, second_image]
+
+    result = pi.validate_carriers_image_files(carrier_files)
+
+    assert result
+
+
+def test_warn_on_malformed_two_sided_image_filename(carrier_files, caplog):
+    carrier = "ACQ_1234_123457"
+
+    image_name = carrier_files[carrier]["images"][0].name
+    first_image = carrier_files[carrier]["images"][0].parent / image_name.replace(".img", "side0.001")
+    second_image = carrier_files[carrier]["images"][0].parent / image_name.replace(".img", "side1.001")
+    second_image.write_text('0')
+
+    carrier_files[carrier]["images"][0].rename(first_image)
+    carrier_files[carrier]["images"] = [first_image, second_image]
+
     result = pi.validate_carriers_image_files(carrier_files)
 
     assert (
-        f"The following categories of files were not found for ACQ_1234_123456: images, logs"
+        'If carrier has 2 disk formats, file names must end with s0.001 or s1.001'
         in caplog.text
     )
+
     assert not result
 
 
 def test_warn_and_skip_0_length_image(carrier_files, caplog):
-    carrier_files["ACQ_1234_123457"]["images"][0].unlink()
-    carrier_files["ACQ_1234_123457"]["images"][0].touch()
+    carrier = "ACQ_1234_123457"
+    carrier_files[carrier]["images"][0].unlink()
+    carrier_files[carrier]["images"][0].touch()
+
     result = pi.validate_carriers_image_files(carrier_files)
 
     assert (
-        f'The following image file is 0-bytes: {str(carrier_files["ACQ_1234_123457"]["images"][0])}'
+        f'The following image file is 0-bytes: {str(carrier_files[carrier]["images"][0])}'
         in caplog.text
     )
     assert not result
 
 
-def test_warn_streams_missing_a_side():
-    # TODO
-    assert True
+def test_warn_streams_folder_empty(carrier_files, caplog):
+    carrier = "ACQ_1234_123457"
+    for file in carrier_files[carrier]["streams"][0].iterdir():
+        file.unlink()
 
-
-def test_warn_only_one_stream_folder_allowed(carrier_files, caplog):
-    carrier_files["ACQ_1234_123457"]["streams"].append("ACQ_1234_123457_2")
     result = pi.validate_carriers_image_files(carrier_files)
 
     assert (
-        f"Multiple folder of stream folders found for ACQ_1234_123457. Only 1 allowed"
+        f'Streams folder for {carrier} appears to be empty'
+        in caplog.text
+    )
+    assert not result
+
+
+def test_warn_only_one_stream_folder_allowed(carrier_files, caplog):
+    carrier = "ACQ_1234_123457"
+    carrier_files[carrier]["streams"].append("ACQ_1234_123457_2")
+    result = pi.validate_carriers_image_files(carrier_files)
+
+    assert (
+        f"Multiple folders of streams found for {carrier}. Only 1 allowed"
         in caplog.text
     )
     assert not result

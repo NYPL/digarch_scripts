@@ -51,17 +51,29 @@ def validate_carriers_image_files(carrier_files: dict) -> bool:
         carrier = carrier_files[carrier_name]
 
         missing = []
-        for key in ["images", "logs", "streams"]:
+        for key in ["images", "logs"]:
             if not key in carrier.keys():
                 missing.append(key)
 
         if missing:
             LOGGER.warning(
-                f'The following categories of files were not found for {carrier_name}: {", ".join(missing)} '
+                f'The following required categories of files were not found for {carrier_name}: {", ".join(missing)} '
             )
             result = False
 
         if "images" in carrier:
+            if len(carrier["images"]) > 1:
+                two_sided = True
+                for image in carrier["images"]:
+                    if not re.match(r"s\d\.001", image.name[-6:]):
+                        print(image.name[-6:])
+                        two_sided = False
+                if not two_sided:
+                    LOGGER.warning(
+                        f'Multiple image files found for {carrier_name}. Only 1 allowed. If carrier has 2 disk formats, file names must end with s0.001 or s1.001: {carrier["images"]}'
+                    )
+                    result = False
+
             for image_file in carrier["images"]:
                 if image_file.stat().st_size == 0:
                     LOGGER.warning(f"The following image file is 0-bytes: {image_file}")
@@ -70,9 +82,15 @@ def validate_carriers_image_files(carrier_files: dict) -> bool:
         if "streams" in carrier:
             if not len(carrier["streams"]) == 1:
                 LOGGER.warning(
-                    f'Multiple folder of stream folders found for {carrier_name}. Only 1 allowed: {carrier["streams"]}'
+                    f'Multiple folders of streams found for {carrier_name}. Only 1 allowed: {carrier["streams"]}'
                 )
                 result = False
+            if not list(carrier["streams"][0].iterdir()):
+                LOGGER.warning(
+                    f'Streams folder for {carrier_name} appears to be empty: {carrier["streams"][0]}'
+                )
+                result = False
+
 
     return result
 
