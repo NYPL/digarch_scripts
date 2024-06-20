@@ -276,7 +276,7 @@ def create_bagit_manifest(paths: list[Path], bag_dir: Path) -> None:
 
     with open(bag_dir / "manifest-md5.txt", "w") as f:
         for line in manifest_lines:
-            f.write(f"{line[0]}  {line[1]}")
+            f.write(f"{line[0]}  {line[1]}\n")
 
     return None
 
