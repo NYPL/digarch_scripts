@@ -19,16 +19,12 @@ def transfer_files(tmp_path: Path, request):
 def args(transfer_files):
     args = [
         "script_name",
-        "--images_folder",
-        str(transfer_files / "images"),
+        "--source",
+        str(transfer_files),
         "--dest",
         str(transfer_files),
         "--acqid",
         "ACQ_1234",
-        "--streams_folder",
-        str(transfer_files / "streams"),
-        "--logs_folder",
-        str(transfer_files / "logs"),
     ]
     return args
 
@@ -38,7 +34,7 @@ def test_requires_args(
 ):
     """Test that script requires image, dest, and id (first 3 args)"""
 
-    for i in range(0, 3):
+    for i in range(0, 2):
         # remove a pair of list items (arg and value) for each test
         part_args = args[0 : 2 * i + 1] + args[2 * i + 3 :]
 
@@ -52,29 +48,12 @@ def test_requires_args(
         assert f"required: {args[2*i+1]}" in stderr
 
 
-def test_optional_args(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, args: list
-):
-    """Test that script requires all five args"""
-
-    for i in [3, 4]:
-        # remove a pair of list items (arg and value) for each test
-        part_args = args[0 : 2 * i + 1] + args[2 * i + 3 :]
-        missing_arg = args[2 * i]
-
-        monkeypatch.setattr("sys.argv", part_args)
-
-        parsed_args = pi.parse_args()
-
-        assert missing_arg not in parsed_args
-
-
 def test_arg_paths_must_exist(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture, args: list
 ):
     """Test that script errors if a path argument doesn't exist"""
 
-    for i in [1, 2, 4, 5]:
+    for i in [1, 2]:
         bad_args = args
         bad_path = "nonexistant"
         bad_args[2 * i] = bad_path
@@ -107,9 +86,9 @@ def test_carrier_files_found(transfer_files):
 
     carrier_files = pi.find_carriers_image_files(
         acq_id,
-        transfer_files / "images",
-        transfer_files / "logs",
-        transfer_files / "streams",
+        transfer_files,
+        transfer_files,
+        transfer_files,
     )
 
     carrier1 = f"{acq_id}_123456"
@@ -127,9 +106,7 @@ def test_acqid_not_found(transfer_files):
     with pytest.raises(Warning) as exc:
         pi.find_carriers_image_files(
             acq_id,
-            transfer_files / "images",
-            transfer_files / "logs",
-            transfer_files / "streams",
+            transfer_files,
         )
 
     assert f"No files found with the acquisition ID {acq_id} in filename" in str(
@@ -143,9 +120,7 @@ def carrier_files(transfer_files):
 
     carrier_files = pi.find_carriers_image_files(
         acq_id,
-        transfer_files / "images",
-        transfer_files / "logs",
-        transfer_files / "streams",
+        transfer_files,
     )
     return carrier_files
 
@@ -280,4 +255,13 @@ def test_full_run(
     acq_dir = Path(args[4]) / args[6]
     assert acq_dir.exists()
 
-    assert "ACQ_1234_123456" in [x.name for x in acq_dir.iterdir()]
+    carrier = "ACQ_1234_123456"
+
+    assert carrier in [x.name for x in acq_dir.iterdir()]
+
+    for x in ['streams', 'images']:
+        component =  (acq_dir / carrier / x)
+        assert component.exists()
+        assert bagit.Bag(str(component)).validate()
+
+    assert (acq_dir / carrier / "metadata").exists()

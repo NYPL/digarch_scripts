@@ -14,23 +14,35 @@ STREAM_EXTS = [""]
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    Parse command line arguments.
+    :return: The parsed arguments.
+    """
     parser = pb.TransferParser(
         description="Create packages for all disk imaging files for a single acquisition."
     )
     parser.add_acqid()
-    parser.add_images_folder()
-    parser.add_logs_folder()
-    parser.add_streams_folder()
+    parser.add_source()
     parser.add_dest()
 
     return parser.parse_args()
 
 
 def find_carriers_image_files(
-    acq_id: str, images_dir: Path, log_dir: Path, stream_dir: Path
+    acq_id: str, source_dir: Path, log_dir: Path=None, stream_dir: Path=None
 ) -> dict:
+    """
+    Find all carrier files for a given acquisition ID in the source directory.
+    """
+
+    # Optional args kept in case process changes back to multiple source folders
+    if not log_dir:
+        log_dir = source_dir
+    if not stream_dir:
+        stream_dir = source_dir
+
     carrier_files = pb.find_category_of_carrier_files(
-        {}, acq_id, images_dir, IMG_EXTS, "images"
+        {}, acq_id, source_dir, IMG_EXTS, "images"
     )
     carrier_files = pb.find_category_of_carrier_files(
         carrier_files, acq_id, log_dir, LOG_EXTS, "logs"
@@ -46,6 +58,9 @@ def find_carriers_image_files(
 
 
 def validate_carriers_image_files(carrier_files: dict) -> bool:
+    """
+    Validate that all required files are present for each carrier.
+    """
     result = True
     for carrier_name in carrier_files:
         carrier = carrier_files[carrier_name]
@@ -66,7 +81,6 @@ def validate_carriers_image_files(carrier_files: dict) -> bool:
                 two_sided = True
                 for image in carrier["images"]:
                     if not re.match(r"s\d\.001", image.name[-6:]):
-                        print(image.name[-6:])
                         two_sided = False
                 if not two_sided:
                     LOGGER.warning(
@@ -96,6 +110,9 @@ def validate_carriers_image_files(carrier_files: dict) -> bool:
 
 
 def package_carriers_image_files(carrier_files: dict, acq_dir: Path) -> None:
+    """
+    Create packages for all carriers in the carrier_files dictionary.
+    """
     for carrier, files in carrier_files.items():
         try:
             base_dir = pb.create_package_dir(acq_dir, carrier)
@@ -114,10 +131,13 @@ def package_carriers_image_files(carrier_files: dict, acq_dir: Path) -> None:
 
 
 def main():
+    """
+    Main function for packaging images.
+    """
     args = parse_args()
 
     carrier_files = find_carriers_image_files(
-        args.acqid, args.images_folder, args.logs_folder, args.streams_folder
+        args.acqid, args.source
     )
 
     if validate_carriers_image_files(carrier_files):
