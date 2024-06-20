@@ -147,16 +147,13 @@ def test_warn_carrier_with_one_missing_category(carrier_files, key, caplog):
 
 def test_warn_more_than_one_image(carrier_files, caplog):
     carrier = "ACQ_1234_123457"
-    second_image = carrier_files[carrier]["images"][0].with_suffix('.img2')
-    second_image.write_text('0')
+    second_image = carrier_files[carrier]["images"][0].with_suffix(".img2")
+    second_image.write_text("0")
     carrier_files[carrier]["images"].append(second_image)
 
     result = pi.validate_carriers_image_files(carrier_files)
 
-    assert (
-        f'Multiple image files found for {carrier}. Only 1 allowed'
-        in caplog.text
-    )
+    assert f"Multiple image files found for {carrier}. Only 1 allowed" in caplog.text
     assert not result
 
 
@@ -164,9 +161,13 @@ def test_accept_two_sided_images(carrier_files):
     carrier = "ACQ_1234_123457"
 
     image_name = carrier_files[carrier]["images"][0].name
-    first_image = carrier_files[carrier]["images"][0].parent / image_name.replace(".img", "s0.001")
-    second_image = carrier_files[carrier]["images"][0].parent / image_name.replace(".img", "s1.001")
-    second_image.write_text('0')
+    first_image = carrier_files[carrier]["images"][0].parent / image_name.replace(
+        ".img", "s0.001"
+    )
+    second_image = carrier_files[carrier]["images"][0].parent / image_name.replace(
+        ".img", "s1.001"
+    )
+    second_image.write_text("0")
 
     carrier_files[carrier]["images"][0].rename(first_image)
     carrier_files[carrier]["images"] = [first_image, second_image]
@@ -180,9 +181,13 @@ def test_warn_on_malformed_two_sided_image_filename(carrier_files, caplog):
     carrier = "ACQ_1234_123457"
 
     image_name = carrier_files[carrier]["images"][0].name
-    first_image = carrier_files[carrier]["images"][0].parent / image_name.replace(".img", "side0.001")
-    second_image = carrier_files[carrier]["images"][0].parent / image_name.replace(".img", "side1.001")
-    second_image.write_text('0')
+    first_image = carrier_files[carrier]["images"][0].parent / image_name.replace(
+        ".img", "side0.001"
+    )
+    second_image = carrier_files[carrier]["images"][0].parent / image_name.replace(
+        ".img", "side1.001"
+    )
+    second_image.write_text("0")
 
     carrier_files[carrier]["images"][0].rename(first_image)
     carrier_files[carrier]["images"] = [first_image, second_image]
@@ -190,7 +195,7 @@ def test_warn_on_malformed_two_sided_image_filename(carrier_files, caplog):
     result = pi.validate_carriers_image_files(carrier_files)
 
     assert (
-        'If carrier has 2 disk formats, file names must end with s0.001 or s1.001'
+        "If carrier has 2 disk formats, file names must end with s0.001 or s1.001"
         in caplog.text
     )
 
@@ -218,10 +223,7 @@ def test_warn_streams_folder_empty(carrier_files, caplog):
 
     result = pi.validate_carriers_image_files(carrier_files)
 
-    assert (
-        f'Streams folder for {carrier} appears to be empty'
-        in caplog.text
-    )
+    assert f"Streams folder for {carrier} appears to be empty" in caplog.text
     assert not result
 
 
@@ -259,8 +261,8 @@ def test_full_run(
 
     assert carrier in [x.name for x in acq_dir.iterdir()]
 
-    for x in ['streams', 'images']:
-        component =  (acq_dir / carrier / x)
+    for x in ["streams", "images"]:
+        component = acq_dir / carrier / x
         assert component.exists()
         assert bagit.Bag(str(component)).validate()
 

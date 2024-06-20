@@ -115,8 +115,16 @@ class TransferParser(argparse.ArgumentParser):
     def add_dest(self) -> None:
         self.add_argument("--dest", required=True, type=self.extant_path)
 
+    def add_transfer(self) -> None:
+        self.add_argument(
+            "--transfers",
+            required=True,
+            type=self.extant_path,
+            help="Path to the directory containing all transfers",
+        )
+
     def add_quiet(self, **kwargs) -> None:
-        self.add_argument("-q", "--quiet", action='store_true', **kwargs)
+        self.add_argument("-q", "--quiet", action="store_true", **kwargs)
 
 
 def find_category_of_carrier_files(
@@ -254,7 +262,7 @@ def create_bag_in_objects(
         [objects_path], pkg_dir, "objects", manifest_source, manifest_type
     )
     if not list(objects_path.iterdir()):
-       objects_path.rmdir()
+        objects_path.rmdir()
 
     return None
 
@@ -292,7 +300,9 @@ def convert_rclone_md5_to_bagit_manifest(md5_path: Path, bag_dir: Path) -> None:
     return None
 
 
-def convert_rsync_log_to_bagit_manifest(rsync_log: Path, bag_dir: Path, prefix: Path = None) -> None:
+def convert_rsync_log_to_bagit_manifest(
+    rsync_log: Path, bag_dir: Path, prefix: Path = None
+) -> None:
     # check for manifest
     new_md5_path = bag_dir / "manifest-md5.txt"
     if new_md5_path.exists():
@@ -325,7 +335,9 @@ def convert_rsync_log_to_bagit_manifest(rsync_log: Path, bag_dir: Path, prefix: 
         if not poss_md5_hash:
             continue
         elif not re.match(r"[0-9a-f]{32}", poss_md5_hash):
-            LOGGER.warning(f"{str(rsync_log.name)} should be formatted with md5 hash in the 3rd comma-separated fields. Skipping this line: {line}")
+            LOGGER.warning(
+                f"{str(rsync_log.name)} should be formatted with md5 hash in the 3rd comma-separated fields. Skipping this line: {line}"
+            )
             continue
 
         manifest_data.append(f"{poss_md5_hash}  {poss_rel_path}\n")

@@ -1,6 +1,6 @@
 import shutil
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 import bagit
 import pytest
@@ -96,7 +96,10 @@ def test_rsync_completes_successfully(transfer_files):
 def test_rsync_fails_gracefully(transfer_files, monkeypatch, caplog):
     tr.run_rsync("/nonexistant", transfer_files)
 
-    assert "Transfer did not complete successfully. Delete transferred files and re-run" in caplog.text
+    assert (
+        "Transfer did not complete successfully. Delete transferred files and re-run"
+        in caplog.text
+    )
 
 
 @pytest.fixture

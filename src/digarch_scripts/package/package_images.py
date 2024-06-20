@@ -29,7 +29,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def find_carriers_image_files(
-    acq_id: str, source_dir: Path, log_dir: Path=None, stream_dir: Path=None
+    acq_id: str, source_dir: Path, log_dir: Path = None, stream_dir: Path = None
 ) -> dict:
     """
     Find all carrier files for a given acquisition ID in the source directory.
@@ -105,7 +105,6 @@ def validate_carriers_image_files(carrier_files: dict) -> bool:
                 )
                 result = False
 
-
     return result
 
 
@@ -136,9 +135,7 @@ def main():
     """
     args = parse_args()
 
-    carrier_files = find_carriers_image_files(
-        args.acqid, args.source
-    )
+    carrier_files = find_carriers_image_files(args.acqid, args.source)
 
     if validate_carriers_image_files(carrier_files):
         package_carriers_image_files(carrier_files, args.dest)

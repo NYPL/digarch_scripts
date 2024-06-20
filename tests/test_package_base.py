@@ -215,7 +215,11 @@ MOVE_FILES = [
 
 @pytest.mark.parametrize("test_function,dest", MOVE_FILES)
 def test_move_multiple_file(
-    package_base_dir: Path, rclone_log: Path, rclone_md5_manifest: Path, test_function, dest: str
+    package_base_dir: Path,
+    rclone_log: Path,
+    rclone_md5_manifest: Path,
+    test_function,
+    dest: str,
 ):
     """Test that multiple files are moved successfully"""
     parts = dest.split("/")
@@ -230,7 +234,11 @@ def test_move_multiple_file(
 
 @pytest.mark.parametrize("test_function,dest", MOVE_FILES)
 def test_partial_halt_multiple_files(
-    package_base_dir: Path, rclone_log: Path, rclone_md5_manifest: Path, test_function, dest: str
+    package_base_dir: Path,
+    rclone_log: Path,
+    rclone_md5_manifest: Path,
+    test_function,
+    dest: str,
 ):
     """Test that warning is issued for multiple move if a single metadata move fails"""
 
@@ -293,49 +301,65 @@ def test_convert_rsync_log(rsync_bag_payload: Path, rsync_log: Path, rsync_files
         md5_paths = [line.strip().split("  ")[-1] for line in m.readlines()]
 
     payload_files = [
-        str(path.relative_to(rsync_bag_payload.parent)) for path in rsync_bag_payload.rglob("*")
+        str(path.relative_to(rsync_bag_payload.parent))
+        for path in rsync_bag_payload.rglob("*")
     ]
 
     for a_file in md5_paths:
         assert a_file in payload_files
 
 
-def test_convert_rsync_log_replaces_prefix_with_data(rsync_bag_payload: Path, rsync_log: Path):
-    prefix = "/Users/fortitude/dev/digarch-scripts-poetry/tests/fixtures/rsync/rsync_files"
+def test_convert_rsync_log_replaces_prefix_with_data(
+    rsync_bag_payload: Path, rsync_log: Path
+):
+    prefix = (
+        "/Users/fortitude/dev/digarch-scripts-poetry/tests/fixtures/rsync/rsync_files"
+    )
     pb.convert_rsync_log_to_bagit_manifest(rsync_log, rsync_bag_payload.parent, prefix)
     bag_md5 = rsync_bag_payload.parent / "manifest-md5.txt"
 
-    #extract paths from manifest
+    # extract paths from manifest
     with open(bag_md5) as m:
         md5_paths = [line.strip().split("  ")[-1] for line in m.readlines()]
 
-    #extract paths from log
+    # extract paths from log
     rsync_paths = []
     with open(rsync_log) as m:
         lines = m.readlines()
         for line in lines:
             parts = line.strip().split(", ")
             if len(parts) > 3 and parts[2].strip():
-                rsync_paths.append(line.strip().split(", ")[-1].replace(prefix[1:], 'data'))
+                rsync_paths.append(
+                    line.strip().split(", ")[-1].replace(prefix[1:], "data")
+                )
 
-    #assert difference
+    # assert difference
     assert set(md5_paths) == set(rsync_paths)
 
 
-def test_convert_rsync_log_requires_specific_format(rsync_bag_payload: Path, rsync_log: Path, caplog):
-    rsync_log.write_text('time, size, not a hash, good/path')
+def test_convert_rsync_log_requires_specific_format(
+    rsync_bag_payload: Path, rsync_log: Path, caplog
+):
+    rsync_log.write_text("time, size, not a hash, good/path")
     pb.convert_rsync_log_to_bagit_manifest(rsync_log, rsync_bag_payload.parent)
 
-    assert f"{str(rsync_log.name)} should be formatted with md5 hash in the 3rd comma-separated fields" in caplog.text
+    assert (
+        f"{str(rsync_log.name)} should be formatted with md5 hash in the 3rd comma-separated fields"
+        in caplog.text
+    )
 
 
-def test_create_objects_bag(package_base_dir: Path, rclone_payload: Path, rclone_md5_manifest: Path):
+def test_create_objects_bag(
+    package_base_dir: Path, rclone_payload: Path, rclone_md5_manifest: Path
+):
     """Test that all tag files are created and rclone md5sums are correctly converted"""
 
     bag_path = package_base_dir / "objects"
 
     # might need further testing of the oxum and manifest converter functions
-    pb.create_bag_in_objects(rclone_payload, package_base_dir, rclone_md5_manifest, 'rclone')
+    pb.create_bag_in_objects(
+        rclone_payload, package_base_dir, rclone_md5_manifest, "rclone"
+    )
 
     assert bagit.Bag(str(bag_path)).validate(completeness_only=True)
     assert not rclone_payload.exists()
