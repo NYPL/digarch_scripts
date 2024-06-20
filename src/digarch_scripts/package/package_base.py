@@ -271,6 +271,8 @@ def create_bagit_manifest(paths: list[Path], bag_dir: Path) -> None:
     # paths must be files
     manifest_lines = []
     for path in paths:
+        if path.is_dir():
+            raise IsADirectoryError(f"{path} is a directory, skipping")
         md5_hash = bagit.generate_manifest_lines(str(path), ["md5"])[0][1]
         manifest_lines.append([md5_hash, Path("data") / path.name])
 

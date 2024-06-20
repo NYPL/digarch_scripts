@@ -104,6 +104,12 @@ def validate_carriers_image_files(carrier_files: dict) -> bool:
                     f'Streams folder for {carrier_name} appears to be empty: {carrier["streams"][0]}'
                 )
                 result = False
+            for child in carrier["streams"][0].iterdir():
+                if child.is_dir():
+                    LOGGER.warning(
+                        f"Folders found with streams folder for {carrier_name}. None allowed: {child}"
+                    )
+                    result = False
 
     return result
 
@@ -118,9 +124,9 @@ def package_carriers_image_files(carrier_files: dict, acq_dir: Path) -> None:
             pb.move_metadata_files(files["logs"], base_dir)
             pb.create_bag_in_images(files["images"], base_dir)
             pb.create_bag_in_streams(files["streams"][0], base_dir)
-        except:
+        except Exception as e:
             LOGGER.error(
-                f"Packaging incomplete for {carrier}. Address warnings manually."
+                f"Packaging incomplete for {carrier}. Address warnings manually.\n{e}"
             )
         finally:
             pb.validate_images_bag(base_dir)

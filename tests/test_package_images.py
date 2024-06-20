@@ -239,6 +239,17 @@ def test_warn_only_one_stream_folder_allowed(carrier_files, caplog):
     assert not result
 
 
+def test_warn_stream_folder_contains_folders(carrier_files, caplog):
+    carrier = "ACQ_1234_123457"
+    (carrier_files[carrier]["streams"][0] / "subfolder").mkdir()
+    result = pi.validate_carriers_image_files(carrier_files)
+
+    assert (
+        f"Folders found with streams folder for {carrier}. None allowed" in caplog.text
+    )
+    assert not result
+
+
 def test_good_packaging(carrier_files, tmp_path: Path):
     pi.package_carriers_image_files(carrier_files, tmp_path)
 

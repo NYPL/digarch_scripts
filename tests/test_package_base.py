@@ -79,11 +79,11 @@ def test_file_found(image_files):
 
     carrier_files = {}
     carrier_files = pb.find_category_of_carrier_files(
-        carrier_files, acq_id, image_files / "images", [".img"], "images"
+        carrier_files, acq_id, image_files, [".img"], "images"
     )
 
     assert (
-        image_files / "images" / "ACQ_1234_123456.img"
+        image_files / "ACQ_1234_123456.img"
         in carrier_files[f"{acq_id}_123456"]["images"]
     )
 
@@ -93,7 +93,7 @@ def test_ignore_unknown_extension_for_category(image_files):
 
     carrier_files = {}
     carrier_files = pb.find_category_of_carrier_files(
-        carrier_files, acq_id, image_files / "images", [".001"], "images"
+        carrier_files, acq_id, image_files, [".001"], "images"
     )
 
     assert f"{acq_id}_123456" not in carrier_files
@@ -104,7 +104,7 @@ def test_multiple_files_found(image_files):
 
     carrier_files = {}
     carrier_files = pb.find_category_of_carrier_files(
-        carrier_files, acq_id, image_files / "logs", [".log"], "logs"
+        carrier_files, acq_id, image_files, [".log"], "logs"
     )
 
     assert len(carrier_files[f"{acq_id}_123456"]["logs"]) == 2
@@ -366,21 +366,39 @@ def test_create_objects_bag(
 
 
 def test_create_streams_bag(package_base_dir: Path, image_files: Path):
-    """Test that all tag files are created and rclone md5sums are correctly converted"""
+    """Test that all tag files are created and new md5s are correctly created"""
 
-    streams_path = image_files / "streams" / "ACQ_1234_123456"
+    streams_path = image_files / "ACQ_1234_123456"
     bag_path = package_base_dir / "streams"
 
-    # might need further testing of the oxum and manifest converter functions
     pb.create_bag_in_streams(streams_path, package_base_dir)
 
     assert bagit.Bag(str(bag_path)).validate(completeness_only=True)
     assert not streams_path.exists()
 
 
+def test_error_on_folder_when_creating_streams_bag(
+    package_base_dir: Path, image_files: Path
+):
+    """Test that Exception is raised when streams folder contains a child directory"""
+
+    streams_path = image_files / "ACQ_1234_123456"
+    subdir = streams_path / "subdir"
+    subdir.mkdir()
+    streams_contents = set(streams_path.iterdir())
+    bag_path = package_base_dir / "streams"
+
+    with pytest.raises(IsADirectoryError) as exc:
+        pb.create_bag_in_streams(streams_path, package_base_dir)
+
+    assert f"{str(subdir)} is a directory, skipping" in str(exc.value)
+    assert set(streams_path.iterdir()) == streams_contents
+    assert not list(bag_path.iterdir())
+
+
 def test_generate_valid_oxum(transfer_files: Path):
     """Test that script generates oxum correctly"""
-    # test with entire fixture to text folder recursion
+    # test with entire fixture to test folder recursion
 
     total_bytes, total_files = pb.get_oxum(transfer_files)
 
