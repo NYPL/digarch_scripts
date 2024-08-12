@@ -115,7 +115,7 @@ class TransferParser(argparse.ArgumentParser):
     def add_dest(self) -> None:
         self.add_argument("--dest", required=True, type=self.extant_path)
 
-    def add_transfer(self) -> None:
+    def add_transfers(self) -> None:
         self.add_argument(
             "--transfers",
             required=True,
