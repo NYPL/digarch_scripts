@@ -13,7 +13,7 @@ def parsed_report():
 
 def test_identify_all_ers(parsed_report):
     """Function should list every bookmark starting with ER"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
 
     just_ers = [er[0][-1].split(':')[0] for er in ers]
 
@@ -24,7 +24,7 @@ def test_identify_all_ers(parsed_report):
 def test_hierarchy_nests_down_correctly(parsed_report):
     """Function should include organization hierarchy.
     These are not great tests, but I'm not sure what the better strategy would be"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
     assert ['Extents Test papers', 'Series 1', 'Subseries(1)', 'ER 1: Text, 2023'] in just_titles
@@ -32,14 +32,14 @@ def test_hierarchy_nests_down_correctly(parsed_report):
 
 def test_hierarchy_nests_empty_subseries(parsed_report):
     """Function should include organization hierarchy including empty levels"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
     assert ['Extents Test papers', 'Series 1', 'Subseries(1)', 'Subsubseries(2)', 'Subsubsubseries(3)', 'Subsubsubsubseries(4)', 'ER 10: Folder 2, 2023'] in just_titles
 
 def test_hierarchy_nests_up_correctly(parsed_report):
     """Function should be able to step down in hierarchy"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
     assert ['Extents Test papers', 'Series 1', 'Subseries(1)', 'Subsubseries(2) the second', 'ER 23: File 17, 2023'] in just_titles
@@ -47,7 +47,7 @@ def test_hierarchy_nests_up_correctly(parsed_report):
 
 def test_hierarchy_nests_reverse_order_bookmarks(parsed_report):
     """Function should parse bottom-up hierarchy"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
     assert ['Extents Test papers', 'Series 2', 'ER 9: File 20,2023'] in just_titles
@@ -56,7 +56,7 @@ def test_hierarchy_nests_reverse_order_bookmarks(parsed_report):
 
 def test_er_outside_of_series(parsed_report):
     """Function should include capture ERs even if they're not in a series"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
     just_titles = [er[0] for er in ers]
 
     assert ['Extents Test papers', 'ER 10: File 21,2023'] in just_titles
@@ -66,7 +66,7 @@ def test_correct_report_many_files(parsed_report):
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
     er_with_many_files = [['ER 1', 'bk6001']]
-    extents = rfe.add_extents_to_ers(er_with_many_files, bookmark_tables)
+    extents = rfe.add_extents_to_components(er_with_many_files, bookmark_tables)
 
     # bytes
     assert extents[0][1] == 110
@@ -79,7 +79,7 @@ def test_correct_report_on_er_with_folder_bookmarked(parsed_report):
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
     er_with_folder = [['ER 10', 'bk12001']]
-    extents = rfe.add_extents_to_ers(er_with_folder, bookmark_tables)
+    extents = rfe.add_extents_to_components(er_with_folder, bookmark_tables)
 
     # bytes
     assert extents[0][1] == 80
@@ -92,7 +92,7 @@ def test_correct_report_on_er_with_folder_not_bookmarked(parsed_report):
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
     er_with_folder = [['ER 3', 'bk11001']]
-    extents = rfe.add_extents_to_ers(er_with_folder, bookmark_tables)
+    extents = rfe.add_extents_to_components(er_with_folder, bookmark_tables)
 
     # bytes
     assert extents[0][1] == 60
@@ -104,7 +104,7 @@ def test_correct_report_1_file(parsed_report):
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
     er_with_one_file = [['ER 2', 'bk9001']]
-    extents = rfe.add_extents_to_ers(er_with_one_file, bookmark_tables)
+    extents = rfe.add_extents_to_components(er_with_one_file, bookmark_tables)
 
     # bytes
     assert extents[0][1] == 16
@@ -117,7 +117,7 @@ def test_warn_on_no_files_in_er(parsed_report, caplog):
 
     er_with_no_files = [[['hier', 'archy', 'list'], 'bk27001', 'ER 5: No Files, 2023']]
 
-    extents = rfe.add_extents_to_ers(er_with_no_files, bookmark_tables)
+    extents = rfe.add_extents_to_components(er_with_no_files, bookmark_tables)
 
     assert extents == []
 
@@ -129,7 +129,7 @@ def test_warn_on_a_no_byte_file_in_er(parsed_report, caplog):
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
     er_with_no_bytes = [[['hier', 'archy', 'list'], 'bk28001', 'ER 6: Zero Length, 2023']]
-    rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
+    rfe.add_extents_to_components(er_with_no_bytes, bookmark_tables)
     log_msg = f'{er_with_no_bytes[0][-1]} contains the following 0-byte file: file00.txt. Review this file with the processing archivist.'
     assert log_msg in caplog.text
 
@@ -138,11 +138,11 @@ def test_warn_on_no_bytes_in_er(parsed_report, caplog):
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
 
     er_with_no_bytes = [[['hier', 'archy', 'list'], 'bk28001', 'ER 6: Zero Length, 2023']]
-    extents = rfe.add_extents_to_ers(er_with_no_bytes, bookmark_tables)
+    extents = rfe.add_extents_to_components(er_with_no_bytes, bookmark_tables)
 
     assert extents == []
 
-    log_msg = f'{er_with_no_bytes[0][-1]} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.'
+    log_msg = f'{er_with_no_bytes[0][-1]} contains no files with bytes. This component is omitted from report. Review this component with the processing archivist.'
     assert log_msg in caplog.text
 
 
@@ -154,9 +154,9 @@ def test_extract_collection_name_from_report(parsed_report):
 
 @pytest.fixture
 def ers_with_extents_list(parsed_report):
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
     bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
-    ers_with_extents = rfe.add_extents_to_ers(ers, bookmark_tables)
+    ers_with_extents = rfe.add_extents_to_components(ers, bookmark_tables)
 
     return ers_with_extents
 
@@ -190,30 +190,31 @@ def test_json_objects_contains_expected_fields(ers_with_extents_list):
 
 def test_skipped_ER_number_behavior(parsed_report, caplog):
     """Test if script flags when ER numbering is not sequential"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
 
     for i in range(13, 23):
-        assert f'Collection uses ER 1 to ER 23. ER {i} is skipped. Review the ERs with the processing archivist' in caplog.text
+        assert f'Collection ER component range is numbered 1 to 23. {i} is skipped. Review the bookmarks with the processing archivist' in caplog.text
 
 
 def test_ER_missing_number_behavior(parsed_report, caplog):
     """Test if script flags when ER number is reused"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
     ers[0][2] = "ER ?: File 21,2023"
 
-    rfe.audit_ers(ers)
+    rfe.audit_components(ers)
 
-    log_msg = f'ER is missing a number: ER ?: File 21,2023. Review the ERs with the processing archivist'
+    log_msg = f'Component is missing a number: ER ?: File 21,2023. Review the bookmarks with the processing archivist'
     assert log_msg in caplog.text
 
 
 def test_repeated_ER_number_behavior(parsed_report, caplog):
     """Test if script flags when ER number is reused"""
-    ers = rfe.create_er_list(parsed_report)
+    ers = rfe.create_component_list(parsed_report)
 
-    rfe.audit_ers(ers)
+    rfe.audit_components(ers)
 
-    log_msg = f'ER 10 is used multiple times: ER 10: File 21,2023, ER 10: Folder 2, 2023. Review the ERs with the processing archivist'
+    log_msg = f'ER 10 is used multiple times: ER 10: File 21,2023, ER 10: Folder 2, 2023. Review the bookmarks with the processing archivist'
+
     assert log_msg in caplog.text
 
 @pytest.fixture
