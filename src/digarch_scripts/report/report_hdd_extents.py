@@ -4,6 +4,7 @@ import json
 import pathlib
 import logging
 import re
+
 LOGGER = logging.getLogger(__name__)
 
 def parse_args():
@@ -67,7 +68,7 @@ def get_ers(
                     for f in files:
                         count += 1
                         fp = os.path.join(path, f)
-                        if os.path.getsize(fp) == 0:
+                        if os.path.getsize(fp) == 0 and not os.path.basename(fp).startswith('Icon'):
                             LOGGER.warning(
                             f'{possible_er.name} contains the following 0-byte file: {f}. Review this file with the processing archivist.')
                         size += os.path.getsize(fp)
@@ -87,14 +88,13 @@ def get_ers(
         ers.append([str(er), size, count, possible_er.name])
     return ers
 
-def extract_collection_title(hdd_dir: pathlib.Path) -> str:
-    for item in hdd_dir.iterdir():
-        if re.match(r'M\d+\_FAcomponents', item.name):
-            return item.name
-        else:
-            LOGGER.warning(
-                'Cannot find CollectionID_FAcomponents directory. Please use CollectionID_FAcomponents naming convention for the directory containing all ERs.'
-            )
+def extract_collection_title(facomponent_dir: pathlib.Path) -> str:
+    if re.match(r'M\d+\_FAcomponents', facomponent_dir.name):
+        return facomponent_dir.name
+    else:
+        LOGGER.warning(
+            f'Parent folder does not match CollectionID_FAcomponents naming convention: {facomponent_dir.name}'
+        )
 
 def audit_ers(ers: list[list[str, str, str]]) -> None:
     er_numbers_used = {}
@@ -148,7 +148,8 @@ def process_item(
     report: dict
 ) -> dict:
     if not '/' in input[0]:
-        parts = re.match(r'(ER \d+)\s(.*)', input[0])
+        # although not recommended, an extra character is allowed after the ER number
+        parts = re.match(r'(ER \d+)[^\d]?\s(.*)', input[0])
         report['children'].append({
             'title': input[0],
             'er_number': parts.group(1),
@@ -180,11 +181,11 @@ def write_report(
 def main():
     args = parse_args()
 
-    LOGGER.info('retrieving ER folder paths')
+    LOGGER.info('collecting data from file system')
+    colltitle = extract_collection_title(args.dir)
     ers = get_ers(args.dir)
 
     LOGGER.info('creating report')
-    colltitle = extract_collection_title(args.dir)
     stub_report = {'title': colltitle, 'children': []}
     full_report = create_report(ers, stub_report)
 
