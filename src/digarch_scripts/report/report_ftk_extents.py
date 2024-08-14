@@ -1,5 +1,6 @@
 from lxml import etree
 import json
+from collections import defaultdict
 import re
 import argparse
 import os
@@ -74,7 +75,7 @@ def parse_xml(path: pathlib.Path):
     return tree
 
 
-def create_er_list(
+def create_component_list(
     tree: etree.ElementTree
 ) -> list[list[list[str], str, str]]:
 
@@ -90,7 +91,7 @@ def create_er_list(
         namespaces=FO_NAMESPACE
     )[0]
 
-    ers = []
+    components = []
     hierarchy = []
     for child in tree:
         # skip rows with an indent < 24
@@ -110,54 +111,66 @@ def create_er_list(
                 )
             hierarchy.append(child.text)
 
-            # only record if entry is an ER
+            # only record if entry is an ER or DI
             possible_ref = child.xpath(
                 'fo:basic-link/fo:page-number-citation', namespaces=FO_NAMESPACE
             )
-            if possible_ref and hierarchy[-1].startswith('ER'):
+            if possible_ref and (hierarchy[-1].startswith('ER') or hierarchy[-1].startswith('DI')):
                 refid = possible_ref[0].get('ref-id')
-                ers.append(
+                components.append(
                     [hierarchy.copy(), refid, hierarchy[-1]]
                 )
 
-    audit_ers(ers)
+    audit_components(components)
 
-    return ers
+    return components
 
 
-def audit_ers(ers: list[list[list[str], str, str]]) -> None:
-    er_numbers_used = {}
-    for er in ers:
-        number = re.match(r'ER (\d+):', er[2])
+def audit_components(components: list[list[list[str], str, str]]) -> None:
+    er_numbers_used = defaultdict(list)
+    di_numbers_used = defaultdict(list)
+    for component in components:
+        number = re.match(r'(ER|DI) (\d+):', component[2])
 
         if not number:
             LOGGER.warning(
-                f'ER is missing a number: {er[2]}. Review the ERs with the processing archivist'
+                f'Component is missing a number: {component[2]}. Review the bookmarks with the processing archivist'
             )
-            er_number = 0
+            er_numbers_used[0].append(component[2])
+
+        elif number[1] == 'ER':
+            er_numbers_used[int(number[2])].append(component[2])
         else:
-            er_number = int(number[1])
+            di_numbers_used[int(number[2])].append(component[2])
 
-        if er_number not in er_numbers_used.keys():
-            er_numbers_used[er_number] = [er[2]]
-        else:
-            er_numbers_used[er_number].append(er[2])
 
-    # test for er number gaps
-    er_min = min(er_numbers_used.keys())
-    er_max = max(er_numbers_used.keys())
-    for i in range(er_min, er_max):
-        if i not in er_numbers_used.keys():
-            LOGGER.warning(
-                f'Collection uses ER {er_min} to ER {er_max}. ER {i} is skipped. Review the ERs with the processing archivist'
-            )
+    def test_for_number_gaps(numbers_used: dict, type: str):
+        if not numbers_used:
+            return None
 
-    # test for duplicate ers
-    for er_number, er_names in er_numbers_used.items():
-        if len(er_names) > 1:
-            LOGGER.warning(
-                f'ER {er_number} is used multiple times: {", ".join(er_names)}. Review the ERs with the processing archivist'
-            )
+        min_number = min(numbers_used.keys())
+        max_number = max(numbers_used.keys())
+        for i in range(min_number, max_number):
+            if i not in numbers_used.keys():
+                LOGGER.warning(
+                    f'Collection {type} component range is numbered {min_number} to {max_number}. {i} is skipped. Review the bookmarks with the processing archivist'
+                )
+
+    test_for_number_gaps(er_numbers_used, 'ER')
+    test_for_number_gaps(di_numbers_used, 'DI')
+
+    def test_for_duplicate_numbers(numbers_used: dict, type: str):
+        if not numbers_used:
+            return None
+
+        for number, names in numbers_used.items():
+            if len(names) > 1:
+                LOGGER.warning(
+                    f'{type} {number} is used multiple times: {", ".join(names)}. Review the bookmarks with the processing archivist'
+                )
+
+    test_for_duplicate_numbers(er_numbers_used, 'ER')
+    test_for_duplicate_numbers(di_numbers_used, 'DI')
 
     return None
 
@@ -197,42 +210,42 @@ def transform_bookmark_tables(
     return bookmark_contents
 
 
-def add_extents_to_ers(
-    er_list: list[list[list[str], str, str]],
+def add_extents_to_components(
+    component_list: list[list[list[str], str, str]],
     bookmark_tables: list[dict]
 ) -> list[list[str, int, int]]:
 
     '''
-    summarizes the extent for each ER by
+    summarizes the extent for each component by
     correlating the table of contents with the bookmark tables.
-    Returns list of lists with hierarchal ER string, file size, and file count.
+    Returns list of lists with hierarchal component string, file size, and file count.
     '''
 
-    ers_with_extents = []
+    components_with_extents = []
 
-    for er in er_list:
-        bookmark_id = er[1]
-        er_name = er[-1]
-        size, count = get_er_report(bookmark_tables, bookmark_id, er_name)
+    for component in component_list:
+        bookmark_id = component[1]
+        component_name = component[-1]
+        size, count = get_component_report(bookmark_tables, bookmark_id, component_name)
 
         if count == 0:
             LOGGER.warning(
-                f'{er_name} does not contain any files. It will be omitted from the report.')
+                f'{component_name} does not contain any files. It will be omitted from the report.')
             continue
         if size == 0:
             LOGGER.warning(
-                f'{er_name} contains no files with bytes. This ER is omitted from report. Review this ER with the processing archivist.')
+                f'{component_name} contains no files with bytes. This component is omitted from report. Review this component with the processing archivist.')
             continue
 
-        ers_with_extents.append([er[0], size, count])
+        components_with_extents.append([component[0], size, count])
 
-    return ers_with_extents
+    return components_with_extents
 
 
-def get_er_report(
-    er_files: list[dict],
+def get_component_report(
+    component_files: list[dict],
     bookmark_id: str,
-    er_name: str
+    component_name: str
 ) -> tuple[int, int]:
 
     '''
@@ -244,7 +257,7 @@ def get_er_report(
     count = 0
 
     prefix = bookmark_id.replace('k', 'f')
-    for entry in er_files:
+    for entry in component_files:
         if entry['bookmark_id'] == prefix:
 
             byte_string = entry['Logical Size']
@@ -257,7 +270,7 @@ def get_er_report(
                     file_name = entry['Name']
                     #extract file name, might have to parse file table better
                     LOGGER.warning(
-                        f'{er_name} contains the following 0-byte file: {file_name}. Review this file with the processing archivist.')
+                        f'{component_name} contains the following 0-byte file: {file_name}. Review this file with the processing archivist.')
                 size += file_size
 
             else:
@@ -342,14 +355,14 @@ def main() -> None:
     tree = parse_xml(args.file)
 
     print('Creating report ...')
-    ers = create_er_list(tree)
+    components = create_component_list(tree)
 
     bookmark_tables = transform_bookmark_tables(tree)
-    ers_with_extents = add_extents_to_ers(ers, bookmark_tables)
+    components_with_extents = add_extents_to_components(components, bookmark_tables)
     colltitle = extract_collection_title(tree)
     dct = {'title': colltitle, 'children': []}
-    for er in ers_with_extents:
-        dct = create_report(er, dct)
+    for component in components_with_extents:
+        dct = create_report(component, dct)
 
     print("Writing report ...")
     make_json(args.output, dct, colltitle)
