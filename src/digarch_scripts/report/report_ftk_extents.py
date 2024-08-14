@@ -121,7 +121,7 @@ def audit_components(components: list[list[list[str], str, str]]) -> None:
     er_numbers_used = defaultdict(list)
     di_numbers_used = defaultdict(list)
     for component in components:
-        number = re.match(r'(ER|) (\d+):', component[2])
+        number = re.match(r'(ER|DI) (\d+):', component[2])
 
         if not number:
             LOGGER.warning(

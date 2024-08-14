@@ -140,6 +140,13 @@
                     "title": "Series 3",
                     "children": [
                         {
+                            "title": "DI 1: Blank Disk, 2021",
+                            "er_number": "DI 1",
+                            "er_name": "Blank Disk, 2021",
+                            "file_size": 7168,
+                            "file_count": 1
+                        },
+                        {
                             "title": "ER 12: File 0 (also in ER 1), 2023",
                             "er_number": "ER 12",
                             "er_name": "File 0 (also in ER 1), 2023",

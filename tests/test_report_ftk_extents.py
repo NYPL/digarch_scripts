@@ -83,6 +83,19 @@ def test_correct_report_on_component_with_folder_bookmarked(parsed_report):
     # files
     assert extents[0][2] == 5
 
+def test_correct_report_on_disk_image(parsed_report):
+    """Test if file count and byte count is completed correctly
+    when bookmark includes a folder that is bookmarked"""
+    bookmark_tables = rfe.transform_bookmark_tables(parsed_report)
+
+    component_with_folder = [['DI 1', 'bk31001']]
+    extents = rfe.add_extents_to_components(component_with_folder, bookmark_tables)
+
+    # bytes
+    assert extents[0][1] == 7168
+    # files
+    assert extents[0][2] == 1
+
 def test_correct_report_on_component_with_folder_not_bookmarked(parsed_report):
     """Test if file count and byte count is completed correctly
     when bookmark includes a folder that isn't bookmarked"""
@@ -211,6 +224,7 @@ def test_repeated_component_number_behavior(components, caplog):
     log_msg = f'ER 10 is used multiple times: ER 10: File 21,2023, ER 10: Folder 2, 2023. Review the bookmarks with the processing archivist'
 
     assert log_msg in caplog.text
+
 
 @pytest.fixture
 def expected_json():
