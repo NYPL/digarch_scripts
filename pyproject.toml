@@ -12,8 +12,8 @@ lxml = "^4.9.3"
 bagit = "^1.8.1"
 
 [tool.poetry.scripts]
-report_ftk_extents = 'digarch_scripts.report_ftk_extents:main'
-report_hdd_extents = 'digarch_scripts.report_hdd_extents:main'
+report_ftk_extents = 'digarch_scripts.report.report_ftk_extents:main'
+report_hdd_extents = 'digarch_scripts.report.report_hdd_extents:main'
 package_cloud = 'ipres_package_cloud.package_cloud:main'
 
 [tool.poetry.group.dev.dependencies]
